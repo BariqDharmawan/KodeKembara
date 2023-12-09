@@ -1,1 +1,1 @@
-// import Factory from '@ioc:Adonis/Lucid/Factory'
+import { UserFactory } from 'Database/factories'

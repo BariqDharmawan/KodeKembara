@@ -27,4 +27,7 @@ Route.get('/', async () => {
 Route.group(() => {
   Route.post('login', 'AuthController.login')
   Route.post('logout', 'AuthController.logout')
+  Route.post('user/add', 'AuthController.addUser')
+
+  Route.put('user/update/:uuid', 'AuthController.updateProfile')
 }).namespace('App/Controllers/Http')

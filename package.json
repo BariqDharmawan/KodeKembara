@@ -1,5 +1,5 @@
 {
-  "name": "KodeKembara",
+  "name": "kode_kembara",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -63,6 +63,7 @@
     "mysql2": "^3.6.2",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
-    "source-map-support": "^0.5.21"
+    "source-map-support": "^0.5.21",
+    "uuid": "^9.0.1"
   }
 }

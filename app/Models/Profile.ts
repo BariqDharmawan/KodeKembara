@@ -7,6 +7,9 @@ export default class Profile extends BaseModel {
   public id: number
 
   @column()
+  public name: string
+
+  @column()
   public educational_level_id: string
 
   @column()
