@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon'
 import { BaseModel, BelongsTo, belongsTo, column } from '@ioc:Adonis/Lucid/Orm'
 import User from './User'
+import Educational from './Educational'
 
 export default class Profile extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id: string
 
   @column()
   public name: string
@@ -27,6 +28,13 @@ export default class Profile extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @belongsTo(() => User)
+  @belongsTo(() => User, {
+    foreignKey: 'user_uuid',
+  })
   public user: BelongsTo<typeof User>
+
+  @belongsTo(() => Educational, {
+    foreignKey: 'educational_level_id',
+  })
+  public educational: BelongsTo<typeof Educational>
 }

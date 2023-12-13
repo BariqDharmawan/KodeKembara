@@ -5,9 +5,10 @@ export default class extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.string('id').primary().unique()
-      table.string('skill_name')
-      table.integer('month_of_experience')
+      table.uuid('id', { primaryKey: true }).index()
+      table.string('skill_availables_id').notNullable()
+      table.integer('month_of_experience').notNullable()
+      table.string('user_uuid').notNullable()
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })

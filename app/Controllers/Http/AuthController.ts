@@ -13,8 +13,10 @@ export default class AuthController {
       return await auth.use('api').attempt(email, password, {
         expiresIn: '1 days',
       })
-    } catch {
-      return response.unauthorized('Invalid credentials')
+    } catch (error) {
+      return response.status(422).json({
+        message: 'You are input a wrong email/password',
+      })
     }
   }
 
@@ -34,6 +36,15 @@ export default class AuthController {
       email: user.email,
       created_at: profile.createdAt,
     }
+  }
+
+  public async getCurrentUser({ auth }: HttpContextContract) {
+    return {
+      id: auth.user?.id,
+      email: auth.user?.email,
+      createdAt: auth.user?.createdAt,
+      updatedAt: auth.user?.updatedAt,
+    } as User
   }
 
   public async updateProfile({ request }: HttpContextContract) {

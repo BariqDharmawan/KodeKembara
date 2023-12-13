@@ -1,13 +1,13 @@
 import { DateTime } from 'luxon'
 import { BaseModel, ManyToMany, column, manyToMany } from '@ioc:Adonis/Lucid/Orm'
-import SkillAvailable from './SkillAvailable'
+import CareerAvailable from './CareerAvailable'
 
-export default class CareerAvailable extends BaseModel {
+export default class SkillAvailable extends BaseModel {
   @column({ isPrimary: true })
   public id: string
 
   @column()
-  public title: string
+  public name: string
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -15,9 +15,9 @@ export default class CareerAvailable extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @manyToMany(() => SkillAvailable, {
+  @manyToMany(() => CareerAvailable, {
     pivotTable: 'career_skill_requirements',
     pivotForeignKey: 'skill_availables_id',
   })
-  public skillsRequirement: ManyToMany<typeof SkillAvailable>
+  public careerSuggestion: ManyToMany<typeof CareerAvailable>
 }

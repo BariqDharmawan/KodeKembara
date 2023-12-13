@@ -5,7 +5,7 @@ export default class extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.string('id').unique().primary()
+      table.uuid('id', { primaryKey: true }).index()
       table.string('user_id')
       table.string('recommendation')
       table.integer('confidence_score').unsigned()

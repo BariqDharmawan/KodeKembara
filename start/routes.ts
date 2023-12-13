@@ -1,23 +1,3 @@
-/*
-|--------------------------------------------------------------------------
-| Routes
-|--------------------------------------------------------------------------
-|
-| This file is dedicated for defining HTTP routes. A single file is enough
-| for majority of projects, however you can define routes in different
-| files and just make sure to import them inside this file. For example
-|
-| Define routes in following two files
-| ├── start/routes/cart.ts
-| ├── start/routes/customer.ts
-|
-| and then import them inside `start/routes.ts` as follows
-|
-| import './routes/cart'
-| import './routes/customer'
-|
-*/
-
 import Route from '@ioc:Adonis/Core/Route'
 
 Route.get('/', async () => {
@@ -26,8 +6,21 @@ Route.get('/', async () => {
 
 Route.group(() => {
   Route.post('login', 'AuthController.login')
-  Route.post('logout', 'AuthController.logout')
+
   Route.post('user/add', 'AuthController.addUser')
 
-  Route.put('user/update/:uuid', 'AuthController.updateProfile')
+  Route.group(() => {
+    Route.get('/', 'CareerAvailablesController.index')
+    Route.post('/', 'CareerAvailablesController.store').middleware(['auth', 'isAdmin'])
+  }).prefix('career-available')
+
+  Route.group(() => {
+    Route.post('logout', 'AuthController.logout')
+
+    Route.get('user/me', 'AuthController.getCurrentUser')
+    Route.put('user/update/:uuid', 'AuthController.updateProfile')
+
+    Route.get('user/:userId/skill', 'SkillExperienceController.getUserSkillExperience')
+    Route.post('user/:userId/skill', 'SkillExperienceController.addUserSkillExperience')
+  }).middleware('auth')
 }).namespace('App/Controllers/Http')
