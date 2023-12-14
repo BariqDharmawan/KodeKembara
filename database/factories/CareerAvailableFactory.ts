@@ -8,5 +8,5 @@ export default Factory.define(CareerAvailable, ({ faker }) => {
     title: faker.person.jobTitle(),
   }
 })
-  .relation('skillsRequirement', () => SkillAvailableFactory)
+  // .relation('skillsRequirement', () => SkillAvailableFactory)
   .build()

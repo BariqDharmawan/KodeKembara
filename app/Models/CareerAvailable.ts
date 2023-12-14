@@ -15,6 +15,9 @@ export default class CareerAvailable extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
+  @column.dateTime({ serializeAs: null })
+  public deletedAt: DateTime
+
   @manyToMany(() => SkillAvailable, {
     pivotTable: 'career_skill_requirements',
     pivotForeignKey: 'skill_availables_id',

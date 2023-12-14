@@ -1,26 +1,33 @@
 import Route from '@ioc:Adonis/Core/Route'
 
-Route.get('/', async () => {
-  return { hello: 'world' }
-})
-
 Route.group(() => {
   Route.post('login', 'AuthController.login')
 
-  Route.post('user/add', 'AuthController.addUser')
-
   Route.group(() => {
     Route.get('/', 'CareerAvailablesController.index')
-    Route.post('/', 'CareerAvailablesController.store').middleware(['auth', 'isAdmin'])
+
+    Route.group(() => {
+      Route.post('/', 'CareerAvailablesController.store')
+      Route.put(':id', 'CareerAvailablesController.update')
+      Route.delete(':id', 'CareerAvailablesController.destroy')
+      Route.get('deleted', 'CareerAvailablesController.getDeleted')
+    }).middleware(['auth', 'isAdmin'])
   }).prefix('career-available')
 
   Route.group(() => {
-    Route.post('logout', 'AuthController.logout')
+    Route.get('/', 'UsersController.index')
+    Route.get(':id', 'UsersController.show')
+    Route.post('add', 'UsersController.store').middleware('auth')
+    Route.put(':id/update', 'UsersController.update').middleware('auth')
 
-    Route.get('user/me', 'AuthController.getCurrentUser')
-    Route.put('user/update/:uuid', 'AuthController.updateProfile')
+    Route.get(':userId/skill', 'SkillExperienceController.getUserSkillExperience')
+  }).prefix('users')
 
-    Route.get('user/:userId/skill', 'SkillExperienceController.getUserSkillExperience')
-    Route.post('user/:userId/skill', 'SkillExperienceController.addUserSkillExperience')
-  }).middleware('auth')
+  Route.post('logout', 'AuthController.logout').middleware('auth')
+
+  Route.group(() => {
+    Route.get('/', 'AuthController.getCurrentUser')
+  })
+    .prefix('me')
+    .middleware('auth')
 }).namespace('App/Controllers/Http')

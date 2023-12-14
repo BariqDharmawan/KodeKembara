@@ -9,6 +9,7 @@ export default class extends BaseSchema {
       table.string('title')
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
+      table.timestamp('deleted_at', { useTz: true }).nullable()
     })
   }
 

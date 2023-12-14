@@ -36,7 +36,9 @@ export const { actions } = Bouncer.define(
   (user: User, skillExperience: SkillExperience) => {
     return user.id === skillExperience.user_uuid
   }
-)
+).define('updateUser', (auth: User, userToUpdate: User) => {
+  return auth.id === userToUpdate.id
+})
 
 /*
 |--------------------------------------------------------------------------
