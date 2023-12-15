@@ -15,6 +15,17 @@ Route.group(() => {
   }).prefix('career-available')
 
   Route.group(() => {
+    Route.get('/', 'SkillAvailablesController.index')
+
+    Route.group(() => {
+      Route.post('/', 'SkillAvailablesController.store')
+      Route.put(':id', 'SkillAvailablesController.update')
+      Route.delete(':id', 'SkillAvailablesController.destroy')
+      Route.get('deleted', 'SkillAvailablesController.getDeleted')
+    }).middleware(['auth', 'isAdmin'])
+  }).prefix('skill-available')
+
+  Route.group(() => {
     Route.get('/', 'UsersController.index')
     Route.get(':id', 'UsersController.show')
     Route.post('add', 'UsersController.store').middleware('auth')

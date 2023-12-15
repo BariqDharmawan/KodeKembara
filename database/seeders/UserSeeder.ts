@@ -15,10 +15,8 @@ export default class extends BaseSeeder {
       },
     ])
 
-    await UserFactory.with('skillExperience', 3, (skillExperience) =>
-      skillExperience.with('skillName', 1)
+    await UserFactory.with('profile', 1, (profile) => profile.with('educational', 1)).createMany(
+      100
     )
-      .with('profile', 1, (profile) => profile.with('educational', 1))
-      .createMany(100)
   }
 }
