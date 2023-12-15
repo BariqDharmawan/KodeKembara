@@ -1,7 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { v4 as uuidv4 } from 'uuid'
 import Educational from 'App/Models/Educational'
-import Profile from 'App/Models/Profile'
 import User from 'App/Models/User'
 import Hash from '@ioc:Adonis/Core/Hash'
 
@@ -14,7 +13,18 @@ export default class UsersController {
     const user = await User.findOrFail(params.id)
     await user.load('profile')
 
-    return user
+    await user.load('skillExperience', (skill) => {
+      skill.preload('skillName')
+    })
+
+    return {
+      ...user.toJSON(),
+      profile: user.profile,
+      skillExperience: {
+        total: user.skillExperience.length,
+        data: user.skillExperience,
+      },
+    }
   }
 
   public async store({ request }: HttpContextContract) {

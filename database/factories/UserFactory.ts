@@ -1,6 +1,5 @@
 import User from 'App/Models/User'
 import Factory from '@ioc:Adonis/Lucid/Factory'
-import ProfileFactory from './ProfileFactory'
 import Hash from '@ioc:Adonis/Core/Hash'
 
 export default Factory.define(User, async ({ faker }) => {
@@ -10,6 +9,4 @@ export default Factory.define(User, async ({ faker }) => {
     role: 'user',
     password: await Hash.make('password'),
   }
-})
-  .relation('profile', () => ProfileFactory)
-  .build()
+}).build()

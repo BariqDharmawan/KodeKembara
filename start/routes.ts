@@ -18,6 +18,7 @@ Route.group(() => {
     Route.get('/', 'SkillAvailablesController.index')
 
     Route.group(() => {
+      Route.get(':id', 'SkillAvailablesController.show')
       Route.post('/', 'SkillAvailablesController.store')
       Route.put(':id', 'SkillAvailablesController.update')
       Route.delete(':id', 'SkillAvailablesController.destroy')
@@ -31,7 +32,7 @@ Route.group(() => {
     Route.post('add', 'UsersController.store').middleware('auth')
     Route.put(':id/update', 'UsersController.update').middleware('auth')
 
-    Route.get(':userId/skill', 'SkillExperienceController.getUserSkillExperience')
+    Route.get(':userId/skills', 'SkillExperienceController.getUserSkillExperience')
   }).prefix('users')
 
   Route.post('logout', 'AuthController.logout').middleware('auth')

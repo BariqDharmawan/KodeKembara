@@ -14,6 +14,10 @@ export default class SkillAvailablesController {
     }
   }
 
+  public async show({ params }: HttpContextContract) {
+    return await SkillAvailable.findOrFail(params.id)
+  }
+
   public async store({ request, response }: HttpContextContract) {
     const addNewSkillAvailable = new SkillAvailable()
     addNewSkillAvailable.id = uuidv4()
