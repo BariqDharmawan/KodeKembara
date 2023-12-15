@@ -7,11 +7,14 @@ export default class CareerSkillRequirement extends BaseModel {
   @column({ isPrimary: true })
   public id: string
 
-  @column()
+  @column({ serializeAs: null })
   public career_available_id: string
 
-  @column()
+  @column({ serializeAs: null })
   public skill_availables_id: string
+
+  @column()
+  public minimum_month_experience: number
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
@@ -19,7 +22,9 @@ export default class CareerSkillRequirement extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
 
-  @belongsTo(() => CareerAvailable)
+  @belongsTo(() => CareerAvailable, {
+    foreignKey: 'career_available_id',
+  })
   public careerAvailable: BelongsTo<typeof CareerAvailable>
 
   @belongsTo(() => SkillAvailable, {

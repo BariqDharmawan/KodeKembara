@@ -1,17 +1,11 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { v4 as uuidv4 } from 'uuid'
 import SkillAvailable from 'App/Models/SkillAvailable'
+import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 
 export default class SkillAvailablesController {
-  public async index({ request }: HttpContextContract) {
-    const getSkillAvailable = await SkillAvailable.query()
-      .orderBy('name', 'asc')
-      .paginate(request.input('page', 1), 10)
-
-    return {
-      pagination: getSkillAvailable.getMeta(),
-      data: getSkillAvailable.all(),
-    }
+  public async index() {
+    return await SkillAvailable.query().orderBy('name', 'asc')
   }
 
   public async show({ params }: HttpContextContract) {
@@ -39,5 +33,13 @@ export default class SkillAvailablesController {
       message: 'Successfully update skill available',
       data: updateSKillAvailable,
     })
+  }
+
+  public async getCareerBySkill({ params }: HttpContextContract) {
+    const careerAvailable = await CareerSkillRequirement.query()
+      .where('skill_availables_id', params.id)
+      .preload('careerAvailable')
+
+    return careerAvailable
   }
 }

@@ -1,7 +1,9 @@
 import BaseSeeder from '@ioc:Adonis/Lucid/Seeder'
+import CareerAvailable from 'App/Models/CareerAvailable'
+import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import { v4 as uuidv4 } from 'uuid'
-
+import { faker } from '@faker-js/faker'
 export default class extends BaseSeeder {
   public async run() {
     const skillAvailable = [
@@ -23,10 +25,23 @@ export default class extends BaseSeeder {
       'Python',
     ]
 
+    const careerIds = (await CareerAvailable.all()).map((career) => career.id)
+
     await SkillAvailable.createMany(
       skillAvailable.map((eachSkill) => ({
         id: uuidv4(),
         name: eachSkill,
+      }))
+    )
+
+    const skillIds = (await SkillAvailable.query().select('id')).map((skill) => skill.id)
+
+    await CareerSkillRequirement.createMany(
+      skillIds.map((skillId) => ({
+        career_available_id: careerIds[faker.number.int({ min: 0, max: careerIds.length - 1 })],
+        id: uuidv4(),
+        skill_availables_id: skillId,
+        minimum_month_experience: faker.number.int({ min: 1, max: 100 }),
       }))
     )
   }

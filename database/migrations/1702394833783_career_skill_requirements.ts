@@ -8,6 +8,7 @@ export default class extends BaseSchema {
       table.uuid('id', { primaryKey: true }).index()
       table.string('career_available_id').notNullable()
       table.string('skill_availables_id').notNullable()
+      table.integer('minimum_month_experience').notNullable()
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })

@@ -7,10 +7,10 @@ export default class SkillExperience extends BaseModel {
   @column({ isPrimary: true })
   public id: string
 
-  @column({ serializeAs: null })
+  @column()
   public skill_availables_id: string
 
-  @column({ serializeAs: null })
+  @column()
   public month_of_experience: number
 
   @column({ serializeAs: null })

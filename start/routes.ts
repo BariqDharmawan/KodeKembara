@@ -4,7 +4,21 @@ Route.group(() => {
   Route.post('login', 'AuthController.login')
 
   Route.group(() => {
+    Route.post('logout', 'AuthController.logout')
+    Route.get('me', 'AuthController.getCurrentUser')
+  }).middleware('auth')
+
+  Route.group(() => {
     Route.get('/', 'CareerAvailablesController.index')
+    Route.get(':id', 'CareerAvailablesController.show')
+    Route.get(
+      ':careerId/skill-requirements',
+      'CareerSkillRequirementsController.getSkillRequirements'
+    )
+    Route.delete(
+      ':careerId/skill-requirements',
+      'CareerSkillRequirementsController.deleteSkillRequirements'
+    )
 
     Route.group(() => {
       Route.post('/', 'CareerAvailablesController.store')
@@ -12,7 +26,7 @@ Route.group(() => {
       Route.delete(':id', 'CareerAvailablesController.destroy')
       Route.get('deleted', 'CareerAvailablesController.getDeleted')
     }).middleware(['auth', 'isAdmin'])
-  }).prefix('career-available')
+  }).prefix('careers')
 
   Route.group(() => {
     Route.get('/', 'SkillAvailablesController.index')
@@ -23,8 +37,9 @@ Route.group(() => {
       Route.put(':id', 'SkillAvailablesController.update')
       Route.delete(':id', 'SkillAvailablesController.destroy')
       Route.get('deleted', 'SkillAvailablesController.getDeleted')
+      Route.get(':id/careers', 'SkillAvailablesController.getCareerBySkill')
     }).middleware(['auth', 'isAdmin'])
-  }).prefix('skill-available')
+  }).prefix('skill-availables')
 
   Route.group(() => {
     Route.get('/', 'UsersController.index')
@@ -34,12 +49,4 @@ Route.group(() => {
 
     Route.get(':userId/skills', 'SkillExperienceController.getUserSkillExperience')
   }).prefix('users')
-
-  Route.post('logout', 'AuthController.logout').middleware('auth')
-
-  Route.group(() => {
-    Route.get('/', 'AuthController.getCurrentUser')
-  })
-    .prefix('me')
-    .middleware('auth')
 }).namespace('App/Controllers/Http')

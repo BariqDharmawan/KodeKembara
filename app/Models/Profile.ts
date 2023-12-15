@@ -4,13 +4,13 @@ import User from './User'
 import Educational from './Educational'
 
 export default class Profile extends BaseModel {
-  @column({ isPrimary: true })
+  @column({ isPrimary: true, serializeAs: null })
   public id: string
 
   @column()
   public name: string
 
-  @column()
+  @column({ serializeAs: null })
   public educational_level_id: string
 
   @column()
@@ -19,10 +19,10 @@ export default class Profile extends BaseModel {
   @column()
   public age: number
 
-  @column()
+  @column({ serializeAs: null })
   public user_uuid: string
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, serializeAs: null })
   public createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })

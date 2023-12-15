@@ -13,13 +13,14 @@ export default class extends BaseSeeder {
   public async run() {
     const educationAvailable = ['SMK', 'SMA', 'S1', 'S2', 'S3']
 
-    const addProfile = (userId: string) => {
+    const addProfile = (userId: string, educationId) => {
       return {
         id: uuidv4(),
         age: faker.number.int({ min: 15, max: 35 }),
         current_job: faker.word.words(2),
         name: faker.person.fullName(),
         user_uuid: userId,
+        educational_level_id: educationId,
       }
     }
 
@@ -32,12 +33,14 @@ export default class extends BaseSeeder {
       }
     }
 
-    Educational.createMany(
+    await Educational.createMany(
       educationAvailable.map((education) => ({
         id: uuidv4(),
         level: education,
       }))
     )
+
+    const educationIds = (await Educational.query().select('id')).map((education) => education.id)
 
     await User.createMany([
       {
@@ -55,7 +58,14 @@ export default class extends BaseSeeder {
 
     const userIds = users.map((user) => user.id)
     const skillIds = skillAvailable.map((skill) => skill.id)
-    await Profile.createMany(userIds.map((userId) => addProfile(userId)))
+    await Profile.createMany(
+      userIds.map((userId) => {
+        return addProfile(
+          userId,
+          educationIds[faker.number.int({ min: 0, max: educationIds.length - 1 })]
+        )
+      })
+    )
 
     await SkillExperience.createMany(
       userIds.map((userId) => {

@@ -10,16 +10,21 @@ export default class UsersController {
   }
 
   public async show({ params }: HttpContextContract) {
-    const user = await User.findOrFail(params.id)
-    await user.load('profile')
-
-    await user.load('skillExperience', (skill) => {
-      skill.preload('skillName')
-    })
+    const user = await User.query()
+      .select('id', 'email')
+      .where('id', params.id)
+      .preload('profile', (profile) => profile.preload('educational'))
+      .preload('skillExperience', (skill) => {
+        skill.preload('skillName')
+      })
+      .firstOrFail()
 
     return {
       ...user.toJSON(),
-      profile: user.profile,
+      profile: {
+        ...user.profile.toJSON(),
+        educational: user.profile.educational.level,
+      },
       skillExperience: {
         total: user.skillExperience.length,
         data: user.skillExperience,
