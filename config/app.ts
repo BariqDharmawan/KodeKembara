@@ -1,10 +1,3 @@
-/**
- * Config source: https://git.io/JfefZ
- *
- * Feel free to let us know via PR, if you find something broken in this config
- * file.
- */
-
 import proxyAddr from 'proxy-addr'
 import Env from '@ioc:Adonis/Core/Env'
 import type { ServerConfig } from '@ioc:Adonis/Core/Server'
@@ -12,19 +5,6 @@ import type { LoggerConfig } from '@ioc:Adonis/Core/Logger'
 import type { ProfilerConfig } from '@ioc:Adonis/Core/Profiler'
 import type { ValidatorConfig } from '@ioc:Adonis/Core/Validator'
 
-/*
-|--------------------------------------------------------------------------
-| Application secret key
-|--------------------------------------------------------------------------
-|
-| The secret to encrypt and sign different values in your application.
-| Make sure to keep the `APP_KEY` as an environment variable and secure.
-|
-| Note: Changing the application key for an existing app will make all
-| the cookies invalid and also the existing encrypted data will not
-| be decrypted.
-|
-*/
 export const appKey: string = Env.get('APP_KEY')
 
 /*
@@ -104,7 +84,7 @@ export const http: ServerConfig = {
   cookie: {
     domain: '',
     path: '/',
-    maxAge: '2h',
+    maxAge: '24h',
     httpOnly: true,
     secure: false,
     sameSite: false,

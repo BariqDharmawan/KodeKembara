@@ -3,10 +3,13 @@ import { v4 as uuidv4 } from 'uuid'
 import Educational from 'App/Models/Educational'
 import User from 'App/Models/User'
 import Hash from '@ioc:Adonis/Core/Hash'
+import { returnResponseFormat } from 'App/Services/ResHelper'
+import UserStoreValidator from 'App/Validators/UserStoreValidator'
+import SkillExperience from 'App/Models/SkillExperience'
 
 export default class UsersController {
   public async index() {
-    return await User.all()
+    return await User.query().where('role', '!=', 'admin').withCount('skillExperience')
   }
 
   public async show({ params }: HttpContextContract) {
@@ -14,9 +17,6 @@ export default class UsersController {
       .select('id', 'email')
       .where('id', params.id)
       .preload('profile', (profile) => profile.preload('educational'))
-      .preload('skillExperience', (skill) => {
-        skill.preload('skillName')
-      })
       .firstOrFail()
 
     return {
@@ -25,55 +25,97 @@ export default class UsersController {
         ...user.profile.toJSON(),
         educational: user.profile.educational.level,
       },
-      skillExperience: {
-        total: user.skillExperience.length,
-        data: user.skillExperience,
-      },
     }
   }
 
-  public async store({ request }: HttpContextContract) {
+  public async listSkillExperience({ params }: HttpContextContract) {
+    const skillExperienceByUser = await SkillExperience.query()
+      .where('user_uuid', params.id)
+      // .select('id', 'month_of_experience', 'created_at', 'updated_at')
+      .preload('skillName')
+
+    return {
+      total: skillExperienceByUser.length,
+      data: skillExperienceByUser,
+    }
+  }
+
+  public async store({ request, response }: HttpContextContract) {
+    await request.validate(UserStoreValidator)
+
     const user = new User()
     user.id = uuidv4()
     user.email = request.input('email')
     user.password = await Hash.make(request.input('password'))
 
-    const profile = await user.related('profile').create({
+    user.related('profile').create({
       id: uuidv4(),
       name: request.input('name'),
     })
 
+    return response.status(201).json(
+      returnResponseFormat({
+        code: 201,
+        message: 'Successfully add new user',
+      })
+    )
+  }
+
+  public async update({ request, response, auth }: HttpContextContract) {
+    const educationLevel = await Educational.find(request.input('educational_level_id'))
+
+    if (!educationLevel) {
+      return response.status(500).json(
+        returnResponseFormat({
+          code: 500,
+          message: 'Education level not found',
+        })
+      )
+    }
+
+    await auth.user!.load('profile')
+
+    auth
+      .user!.profile.merge({
+        age: request.input('age'),
+        current_job: request.input('current_job') || '',
+        educational_level_id: educationLevel.id,
+      })
+      .save()
+
     return {
-      name: profile.name,
-      email: user.email,
-      created_at: profile.createdAt,
+      message: 'Successfully update user',
     }
   }
 
-  public async update({ request, params, bouncer, response }: HttpContextContract) {
-    const user = await User.findOrFail(params.id)
-    const educationLevel = await Educational.findOrFail(request.input('educational_level_id'))
+  public async changePassword({ request, auth }: HttpContextContract) {
+    if (!(await Hash.verify(auth.user!.password, request.input('old_password')))) {
+      return 'not correct'
+    }
 
-    await user.load('profile')
-
-    if (await bouncer.denies('updateUser', user)) {
-      return response.status(403).json({
-        message: 'You are not allowed update another user profile',
+    await auth
+      .user!.merge({
+        password: await Hash.make(request.input('new_password')),
       })
+      .save()
+
+    auth.logout()
+
+    return returnResponseFormat({
+      code: 200,
+      message: 'Successfully update your password',
+    })
+  }
+
+  public async destroy({ params, bouncer, response }: HttpContextContract) {
+    if (await bouncer.denies('isAdmin')) {
+      return response.status(404).json(
+        returnResponseFormat({
+          code: 404,
+          message: 'Route not found',
+        })
+      )
     }
-
-    user.profile.age = request.input('age')
-    user.profile.current_job = request.input('current_job') || ''
-    user.profile.educational_level_id = educationLevel.id
-    user.profile.save()
-
-    await user.profile.load('educational')
-
-    return {
-      name: user.profile.name,
-      age: user.profile.age,
-      current_job: user.profile.current_job,
-      education: user.profile.educational.level,
-    }
+    return (await User.findOrFail(params.id)).delete()
   }
 }

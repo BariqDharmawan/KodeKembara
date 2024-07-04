@@ -4,6 +4,7 @@ import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import { v4 as uuidv4 } from 'uuid'
 import { faker } from '@faker-js/faker'
+import SkillConfidence from 'App/Models/SkillConfidence'
 export default class extends BaseSeeder {
   public async run() {
     const skillAvailable = [
@@ -42,6 +43,23 @@ export default class extends BaseSeeder {
         id: uuidv4(),
         skill_availables_id: skillId,
         minimum_month_experience: faker.number.int({ min: 1, max: 100 }),
+      }))
+    )
+
+    await CareerSkillRequirement.createMany(
+      skillIds.map((skillId) => ({
+        career_available_id: careerIds[faker.number.int({ min: 0, max: careerIds.length - 1 })],
+        id: uuidv4(),
+        skill_availables_id: skillId,
+        minimum_month_experience: faker.number.int({ min: 1, max: 100 }),
+      }))
+    )
+
+    await SkillConfidence.createMany(
+      skillIds.map((skillId) => ({
+        id: uuidv4(),
+        skill_availables_id: skillId,
+        confidence_score: faker.number.float({ min: 0.1, max: 0.9 }),
       }))
     )
   }

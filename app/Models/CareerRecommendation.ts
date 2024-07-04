@@ -5,6 +5,12 @@ export default class CareerRecommendation extends BaseModel {
   @column({ isPrimary: true })
   public id: number
 
+  @column()
+  public confidence_score: number
+
+  @column()
+  public user_uuid: string
+
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime
 

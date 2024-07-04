@@ -6,6 +6,8 @@ import SkillExperience from './SkillExperience'
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
 
+  public static ROLE_USER = ['admin', 'user']
+
   @column({ isPrimary: true })
   public id: string
 
@@ -18,7 +20,7 @@ export default class User extends BaseModel {
   @column({ serializeAs: null })
   public password: string
 
-  @column({ serializeAs: null })
+  @column()
   public role: string
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })

@@ -1,15 +1,13 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
-import User from 'App/Models/User'
 
 export default class extends BaseSchema {
-  protected tableName = 'users'
+  protected tableName = 'career_skill_confidences'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.uuid('id', { primaryKey: true }).index()
-      table.string('email').notNullable().unique()
-      table.string('password').notNullable()
-      table.enum('role', User.ROLE_USER).notNullable()
+      table.string('id').primary()
+      table.string('career_available_id').notNullable()
+      table.string('skill_availables_id').notNullable()
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })

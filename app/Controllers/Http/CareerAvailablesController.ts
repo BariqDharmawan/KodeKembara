@@ -2,9 +2,13 @@ import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { v4 as uuidv4 } from 'uuid'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import { DateTime } from 'luxon'
-import SkillAvailable from 'App/Models/SkillAvailable'
 
 export default class CareerAvailablesController {
+  /**
+   * @index
+   * @summary Get list of career available
+   * @description Return array of career available
+   */
   public async index() {
     return await CareerAvailable.query().whereNull('deleted_at')
   }

@@ -4,6 +4,27 @@ import SkillAvailable from 'App/Models/SkillAvailable'
 import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 
 export default class SkillAvailablesController {
+  public saveSkill(
+    modelToSave: SkillAvailable,
+    request: HttpContextContract['request'],
+    response: HttpContextContract['response'],
+    isNewData = true
+  ) {
+    if (isNewData) {
+      modelToSave.id = uuidv4()
+    }
+    modelToSave.name = request.input('name')
+    modelToSave.save().then(() => {
+      console.log('saved', new Date())
+    })
+
+    return response.json({
+      message: isNewData
+        ? `Successfully add new skill available at ${new Date().toLocaleDateString()}`
+        : 'Successfully update skill available',
+      data: modelToSave,
+    })
+  }
   public async index() {
     return await SkillAvailable.query().orderBy('name', 'asc')
   }
@@ -14,25 +35,12 @@ export default class SkillAvailablesController {
 
   public async store({ request, response }: HttpContextContract) {
     const addNewSkillAvailable = new SkillAvailable()
-    addNewSkillAvailable.id = uuidv4()
-    addNewSkillAvailable.name = request.input('name')
-    addNewSkillAvailable.save()
-
-    return response.json({
-      message: 'Successfully add new skill available',
-      data: addNewSkillAvailable,
-    })
+    return this.saveSkill(addNewSkillAvailable, request, response)
   }
 
   public async update({ request, params, response }: HttpContextContract) {
     const updateSKillAvailable = await SkillAvailable.findOrFail(params.id)
-    updateSKillAvailable.name = request.input('name')
-    updateSKillAvailable.save()
-
-    return response.status(201).json({
-      message: 'Successfully update skill available',
-      data: updateSKillAvailable,
-    })
+    return this.saveSkill(updateSKillAvailable, request, response, false)
   }
 
   public async getCareerBySkill({ params }: HttpContextContract) {
