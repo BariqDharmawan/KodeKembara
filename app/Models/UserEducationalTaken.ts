@@ -1,22 +1,17 @@
 import { DateTime } from 'luxon'
 import { BaseModel, BelongsTo, belongsTo, column } from '@ioc:Adonis/Lucid/Orm'
-import User from './User'
+import User from './User';
+import Educational from './Educational';
 
-export default class Profile extends BaseModel {
-  @column({ isPrimary: true, serializeAs: null })
-  public id: string
-
-  @column()
-  public name: string
-
-  @column()
-  public current_job: string
-
-  @column()
-  public age: number
+export default class UserEducationalTaken extends BaseModel {
+  @column({ isPrimary: true })
+  public id: number
 
   @column({ serializeAs: null })
   public user_uuid: string
+
+  @column({ serializeAs: null })
+  public educational_uuid: string
 
   @column.dateTime({ autoCreate: true, serializeAs: null })
   public createdAt: DateTime
@@ -28,4 +23,9 @@ export default class Profile extends BaseModel {
     foreignKey: 'user_uuid',
   })
   public user: BelongsTo<typeof User>
+
+  @belongsTo(() => Educational, {
+    foreignKey: 'educational_uuid',
+  })
+  public educational: BelongsTo<typeof Educational>
 }

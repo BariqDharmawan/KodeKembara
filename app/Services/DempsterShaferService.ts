@@ -1,39 +1,61 @@
-import { ModelPaginatorContract } from '@ioc:Adonis/Lucid/Orm'
 import CareerAvailable from 'App/Models/CareerAvailable'
-import CareerRecommendation from 'App/Models/CareerRecommendation'
-import CareerSkillConfidence from 'App/Models/CareerSkillConfidence'
 import Educational from 'App/Models/Educational'
-import Profile from 'App/Models/Profile'
-import SkillExperience from 'App/Models/SkillExperience'
+import SkillAvailable from 'App/Models/SkillAvailable'
 
-export default class DempsterShaferService {
-  public async calculateBelieve(userId: string) {
-    const userProfile = await Profile.query().where('user_uuid', userId).firstOrFail()
-    const userEducationalLevel = await Educational.query()
-      .where('id', userProfile.educational_level_id)
-      .firstOrFail()
-    const userSkills = await SkillExperience.query().where('user_uuid', userId).preload('skillName')
+class DempsterShaferService {
+  public async calculate(skills: any[], education: any[]) {
+    // Ambil semua karir yang tersedia
+    const careers = await CareerAvailable.all()
 
-    const beliefs = {}
+    // Inisialisasi hasil rekomendasi
+    const recommendations: any[] = []
 
-    // Calculate belief for educational level
-    beliefs[userEducationalLevel.level] = 1 // Placeholder, replace with actual calculation
+    // Iterasi melalui setiap karir untuk menghitung kepercayaan
+    for (const career of careers) {
+      let belief = 0.0
+      let plausibility = 1.0
 
-    // Calculate beliefs for skills
-    for (const userSkill of userSkills) {
-      const skillConfidence = await CareerSkillConfidence.query()
-        .where('skill_availables_id', userSkill.skill_availables_id)
-        .first()
-
-      if (skillConfidence) {
-        const careers = await userSkill.query().preload('skillName').preload('careerSuggestion')
-
-        for (const career of careers) {
-          beliefs[career.title] = (beliefs[career.title] || 0) + skillConfidence.confidence_score
+      // Hitung kepercayaan berdasarkan skill dan pengalaman
+      for (const skill of skills) {
+        const skillModel = await SkillAvailable.find(skill.id)
+        if (skillModel) {
+          const skillRelevance = this.getSkillRelevanceForCareer(skillModel, career)
+          belief += skillRelevance * (skill.month_of_experience / 12)
         }
       }
+
+      // Hitung kepercayaan berdasarkan pendidikan
+      for (const edu of education) {
+        const educationRelevance = this.getEducationRelevanceForCareer(edu, career)
+        belief += educationRelevance
+      }
+
+      plausibility -= belief
+
+      recommendations.push({
+        career: career.title,
+        belief,
+        plausibility,
+      })
     }
 
-    return beliefs
+    // Sortir rekomendasi berdasarkan kepercayaan tertinggi
+    recommendations.sort((a, b) => b.belief - a.belief)
+
+    return recommendations
+  }
+
+  private getSkillRelevanceForCareer(skill: SkillAvailable, career: CareerAvailable): number {
+    // Implementasikan logika untuk mendapatkan relevansi skill terhadap karir
+    // Contoh: cek apakah skill cocok dengan karir
+    return Math.random() // Contoh: gunakan nilai acak untuk demo
+  }
+
+  private getEducationRelevanceForCareer(education: Educational, career: CareerAvailable): number {
+    // Implementasikan logika untuk mendapatkan relevansi pendidikan terhadap karir
+    // Contoh: cek apakah tingkat pendidikan cocok dengan persyaratan karir
+    return Math.random() // Contoh: gunakan nilai acak untuk demo
   }
 }
+
+export default new DempsterShaferService()

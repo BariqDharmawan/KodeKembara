@@ -71,11 +71,6 @@ Route.group(() => {
     .middleware('auth')
 
   Route.group(() => {
-    Route.get('/', 'CalculateRecommendationsController.index')
-  })
-    .middleware('auth')
-
-  Route.group(() => {
     Route.get('/', 'CareerSkillConfidencesController.index')
     Route.get(':id', 'CareerSkillConfidencesController.show')
   }).prefix('career-confidence')
@@ -86,6 +81,10 @@ Route.group(() => {
     Route.post('/', 'EducationalsController.store')
     Route.put(':id', 'EducationalsController.update')
   }).prefix('educationals')
+
+  Route.group(() => {
+    Route.get('recommendation', 'RecommendationsController.calculate')
+  }).middleware('auth')
 })
   .prefix('v1')
   .namespace('App/Controllers/Http')

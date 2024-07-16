@@ -6,6 +6,7 @@ import Hash from '@ioc:Adonis/Core/Hash'
 import { returnResponseFormat } from 'App/Services/ResHelper'
 import UserStoreValidator from 'App/Validators/UserStoreValidator'
 import SkillExperience from 'App/Models/SkillExperience'
+import UserEducationalTaken from 'App/Models/UserEducationalTaken'
 
 export default class UsersController {
   public async index() {
@@ -16,14 +17,18 @@ export default class UsersController {
     const user = await User.query()
       .select('id', 'email')
       .where('id', params.id)
-      .preload('profile', (profile) => profile.preload('educational'))
+      .preload('profile')
       .firstOrFail()
+
+    const educationalTaken = await UserEducationalTaken.query()
+      .where('user_uuid', user.id)
+      .preload('educational')
 
     return {
       ...user.toJSON(),
       profile: {
         ...user.profile.toJSON(),
-        educational: user.profile.educational.level,
+        educational: educationalTaken,
       },
     }
   }
@@ -79,7 +84,6 @@ export default class UsersController {
       .user!.profile.merge({
         age: request.input('age'),
         current_job: request.input('current_job') || '',
-        educational_level_id: educationLevel.id,
       })
       .save()
 

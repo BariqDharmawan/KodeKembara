@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, HasMany, HasOne, column, hasMany, hasOne } from '@ioc:Adonis/Lucid/Orm'
 import Profile from './Profile'
 import SkillExperience from './SkillExperience'
+import UserEducationalTaken from './UserEducationalTaken'
 
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
@@ -35,4 +36,9 @@ export default class User extends BaseModel {
     foreignKey: 'user_uuid',
   })
   public skillExperience: HasMany<typeof SkillExperience>
+
+  @hasMany(() => UserEducationalTaken, {
+    foreignKey: 'user_uuid',
+  })
+  public educational_taken: HasMany<typeof UserEducationalTaken>
 }

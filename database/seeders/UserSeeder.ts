@@ -10,19 +10,26 @@ import SkillExperience from 'App/Models/SkillExperience'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import CareerSkillConfidence from 'App/Models/CareerSkillConfidence'
 import CareerAvailable from 'App/Models/CareerAvailable'
+import UserEducationalTaken from 'App/Models/UserEducationalTaken'
 
 export default class extends BaseSeeder {
   public async run() {
-    const educationAvailable = ['SMK', 'SMA', 'S1', 'S2', 'S3']
+    const educationAvailable = [
+      'SMK Rekayasa Perangkat Lunak',
+      'SMK Teknik Komputer Jaringan',
+      'SMK Multimedia',
+      'S1 Informatika',
+      'S1 Sistem Informasi',
+      'S1 Desain Komunikasi Visual',
+    ]
 
-    const addProfile = (userId: string, educationId: string) => {
+    const addProfile = (userId: string) => {
       return {
         id: uuidv4(),
         age: faker.number.int({ min: 15, max: 35 }),
         current_job: faker.word.words(2),
         name: faker.person.fullName(),
         user_uuid: userId,
-        educational_level_id: educationId,
       }
     }
 
@@ -43,25 +50,17 @@ export default class extends BaseSeeder {
       }
     }
 
-    await Educational.createMany(
-      educationAvailable.map((education) => ({
-        id: uuidv4(),
-        level: education,
-      }))
-    )
-
-    const educationIds = (await Educational.query().select('id')).map((education) => education.id)
-
-    await User.createMany([
-      {
-        id: uuidv4(),
-        email: 'admin@kodekembara.com',
-        password: await Hash.make('password'),
-        role: 'admin',
-      },
+    await Promise.all([
+      User.createMany([
+        {
+          id: uuidv4(),
+          email: 'admin@kodekembara.com',
+          password: await Hash.make('password'),
+          role: 'admin',
+        },
+      ]),
+      UserFactory.createMany(100),
     ])
-
-    await UserFactory.createMany(100)
 
     const users = await User.query().select('id').where('role', '!=', 'admin')
     const skillAvailable = await SkillAvailable.query().select('id')
@@ -69,20 +68,7 @@ export default class extends BaseSeeder {
     const userIds = users.map((user) => user.id)
     const skillIds = skillAvailable.map((skill) => skill.id)
 
-    const careerAvailableIds = (await CareerAvailable.query().select('id')).map(
-      (career) => career.id
-    )
-
-    await Profile.createMany(
-      userIds.map((userId) => {
-        return addProfile(
-          userId,
-          educationIds[faker.number.int({ min: 0, max: educationIds.length - 1 })]
-        )
-      })
-    )
-
-    await SkillExperience.createMany(
+    SkillExperience.createMany(
       userIds.map((userId) => {
         return addNewSkillExperience(
           skillIds[faker.number.int({ min: 0, max: skillIds.length - 1 })],
@@ -91,31 +77,43 @@ export default class extends BaseSeeder {
       })
     )
 
-    await SkillExperience.createMany(
-      userIds.map((userId) => {
-        return addNewSkillExperience(
-          skillIds[faker.number.int({ min: 0, max: skillIds.length - 1 })],
-          userId
+    Profile.createMany(userIds.map((userId) => addProfile(userId)))
+
+    CareerAvailable.query()
+      .select('id')
+      .then((careers) => {
+        const careerAvailableIds = careers.map((career) => career.id)
+
+        CareerSkillConfidence.createMany(
+          skillIds.map((skillId) => {
+            return careerConfidence(
+              careerAvailableIds[faker.number.int({ min: 0, max: careerAvailableIds.length - 1 })],
+              skillId
+            )
+          })
         )
       })
+
+    await Educational.createMany(
+      educationAvailable.map((education) => ({
+        id: uuidv4(),
+        level: education,
+      }))
     )
 
-    await SkillExperience.createMany(
-      userIds.map((userId) => {
-        return addNewSkillExperience(
-          skillIds[faker.number.int({ min: 0, max: skillIds.length - 1 })],
-          userId
-        )
-      })
+    const educationalIds = (await Educational.query().select('id')).map(
+      (educational) => educational.id
     )
 
-    await CareerSkillConfidence.createMany(
-      skillIds.map((skillId) => {
-        return careerConfidence(
-          careerAvailableIds[faker.number.int({ min: 0, max: careerAvailableIds.length - 1 })],
-          skillId
-        )
-      })
-    )
+    for (let i = 0; i < 3; i++) {
+      UserEducationalTaken.createMany(
+        userIds.map((userId) => ({
+          id: uuidv4(),
+          user_uuid: userId,
+          educational_uuid:
+            educationalIds[faker.number.int({ min: 0, max: educationalIds.length - 1 })],
+        }))
+      )
+    }
   }
 }
