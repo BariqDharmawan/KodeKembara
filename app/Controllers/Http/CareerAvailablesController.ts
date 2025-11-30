@@ -2,6 +2,9 @@ import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { v4 as uuidv4 } from 'uuid'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import { DateTime } from 'luxon'
+import { schema, rules } from '@ioc:Adonis/Core/Validator'
+import TABLE_NAME from 'Contracts/constant'
+import CareerAvailableValidator from 'App/Validators/CareerAvailableValidator'
 
 export default class CareerAvailablesController {
   /**
@@ -18,9 +21,11 @@ export default class CareerAvailablesController {
   }
 
   public async store({ request, response }: HttpContextContract) {
+    const payload = await request.validate(CareerAvailableValidator)
+
     const addNewCareerAvailable = new CareerAvailable()
     addNewCareerAvailable.id = uuidv4()
-    addNewCareerAvailable.title = request.input('title')
+    addNewCareerAvailable.title = payload.title
     addNewCareerAvailable.save()
 
     return response.json({
@@ -41,17 +46,28 @@ export default class CareerAvailablesController {
   }
 
   public async destroy({ params, response }: HttpContextContract) {
-    const deleteCareerAvailable = await CareerAvailable.query()
-      .whereNull('deleted_at')
-      .where('id', params.id)
-      .firstOrFail()
+    try {
+      const deleteCareerAvailable = await CareerAvailable.query()
+        .whereNull('deleted_at')
+        .where('id', params.id)
+        .first()
+      if (!deleteCareerAvailable) {
+        throw {
+          status: 404,
+          message: 'Career available not found',
+        }
+      }
+      deleteCareerAvailable.deletedAt = DateTime.now()
+      deleteCareerAvailable.save()
 
-    deleteCareerAvailable.deletedAt = DateTime.now()
-    deleteCareerAvailable.save()
-
-    return response.status(204).json({
-      message: 'Successfully delete career available',
-    })
+      return response.status(200).json({
+        message: 'Successfully delete career available',
+      })
+    } catch (error) {
+      return response.status(error.status).json({
+        message: error.message,
+      })
+    }
   }
 
   public async getDeleted() {

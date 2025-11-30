@@ -65,7 +65,7 @@ Route.group(() => {
 
   Route.group(() => {
     Route.post('/', 'SkillExperiencesController.store')
-    Route.delete('skill-experiences/:id', 'SkillExperiencesController.destroy')
+    Route.delete(':id', 'SkillExperiencesController.destroy')
   })
     .prefix('skill-experiences')
     .middleware('auth')
@@ -85,6 +85,14 @@ Route.group(() => {
   Route.group(() => {
     Route.get('recommendation', 'RecommendationsController.calculate')
   }).middleware('auth')
+
+  Route.group(() => {
+    Route.get('/', 'CareerEducationMappingController.index')
+    Route.get('career/:id', 'CareerEducationMappingController.show')
+    Route.post('/', 'CareerEducationMappingController.store')
+  })
+    .middleware('auth')
+    .prefix('career-education-mapping')
 })
   .prefix('v1')
   .namespace('App/Controllers/Http')

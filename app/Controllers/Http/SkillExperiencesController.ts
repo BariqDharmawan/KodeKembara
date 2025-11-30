@@ -24,6 +24,8 @@ export default class SkillExperiencesController {
     if (await bouncer.denies('deleteSkillUSer', skillToDelete)) {
       return response.status(403).json({
         message: 'You cant delete other user skill',
+        userId: skillToDelete.user_uuid,
+        authId: auth.user?.id,
       })
     }
 

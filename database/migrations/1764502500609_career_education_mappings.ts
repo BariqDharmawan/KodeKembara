@@ -1,16 +1,16 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
-import TABLE_NAME from 'Contracts/constant'
 
 export default class extends BaseSchema {
-  protected tableName = TABLE_NAME.career_available
+  protected tableName = 'career_education_mappings'
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('id', { primaryKey: true }).index()
-      table.string('title')
+      table.uuid('career_available_id')
+      table.uuid('educational_id')
+      table.float('belief_weight')
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
-      table.timestamp('deleted_at', { useTz: true }).nullable()
     })
   }
 

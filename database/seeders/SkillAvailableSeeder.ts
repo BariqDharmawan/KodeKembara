@@ -27,6 +27,7 @@ export default class extends BaseSeeder {
     ]
 
     const careerIds = (await CareerAvailable.all()).map((career) => career.id)
+    console.log('careerIds', careerIds)
 
     await SkillAvailable.createMany(
       skillAvailable.map((eachSkill) => ({

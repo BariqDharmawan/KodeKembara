@@ -14,9 +14,7 @@ export default class SkillAvailablesController {
       modelToSave.id = uuidv4()
     }
     modelToSave.name = request.input('name')
-    modelToSave.save().then(() => {
-      console.log('saved', new Date())
-    })
+    modelToSave.save()
 
     return response.json({
       message: isNewData

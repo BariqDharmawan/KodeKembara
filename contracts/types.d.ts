@@ -3,4 +3,9 @@ interface InterfaceResAPI {
   code: number
 }
 
-export { InterfaceResAPI }
+interface InterfaceCareerAvailable {
+  id: string
+  title: string
+}
+
+export { InterfaceResAPI, InterfaceCareerAvailable }
