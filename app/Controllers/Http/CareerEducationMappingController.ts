@@ -13,25 +13,23 @@ export default class CareerEducationMappingController {
 
     return careerEducationMapping.map((mapping) => ({
       id: mapping.id,
-      careerAvailable: mapping.careerAvailable,
-      educational: mapping.educational,
+      careerAvailable: mapping.careerAvailable.title,
+      educational: mapping.educational.level,
       belief_weight: mapping.belief_weight,
     }))
   }
 
-  public async show({ response, request }: HttpContextContract) {
-    const careerID = request.param('id') // or params.id depending on your AdonisJS version
+  public async show({ response, params }: HttpContextContract) {
+    const careerID = params.id
 
-    // Validate career exists
-    const careerAvailable = await CareerAvailable.findOrFail(careerID)
+    const [careerAvailable, educationMappings] = await Promise.all([
+      CareerAvailable.findOrFail(careerID),
+      CareerEducationMapping.query()
+        .where('career_available_id', careerID)
+        .preload('educational')
+        .orderBy('belief_weight', 'desc'),
+    ])
 
-    // Fetch all education mappings for this career
-    const educationMappings = await CareerEducationMapping.query()
-      .where('career_available_id', careerID)
-      .preload('educational')
-      .orderBy('belief_weight', 'desc')
-
-    // Transform to clean response format
     const formattedEducations = educationMappings.map((mapping) => ({
       id: mapping.id,
       belief_weight: mapping.belief_weight,
