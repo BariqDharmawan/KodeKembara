@@ -17,6 +17,7 @@ export default class UsersController {
     const user = await User.query()
       .select('id', 'email')
       .where('id', params.id)
+      .orWhere('email', params.id)
       .preload('profile')
       .firstOrFail()
 
