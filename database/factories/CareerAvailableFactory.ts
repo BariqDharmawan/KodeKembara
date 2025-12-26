@@ -6,6 +6,4 @@ export default Factory.define(CareerAvailable, ({ faker }) => {
     id: faker.string.uuid(),
     title: faker.person.jobTitle(),
   }
-})
-  // .relation('skillsRequirement', () => SkillAvailableFactory)
-  .build()
+}).build()

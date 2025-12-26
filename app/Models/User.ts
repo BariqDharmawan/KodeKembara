@@ -1,17 +1,17 @@
 import { DateTime } from 'luxon'
 import { BaseModel, HasMany, HasOne, column, hasMany, hasOne } from '@ioc:Adonis/Lucid/Orm'
+import crypto from 'node:crypto'
 import Profile from './Profile'
 import SkillExperience from './SkillExperience'
 import UserEducationalTaken from './UserEducationalTaken'
 import { TUserRole } from 'Contracts/types'
-
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
 
   public static ROLE_USER: TUserRole[] = ['admin', 'customer']
 
   @column({ isPrimary: true })
-  public id: string
+  public id: crypto.UUID
 
   @column.dateTime({ autoCreate: true })
   public createdAt: DateTime

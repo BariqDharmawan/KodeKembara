@@ -1,5 +1,5 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import Educational from 'App/Models/Educational'
 import User from 'App/Models/User'
 import Hash from '@ioc:Adonis/Core/Hash'
@@ -49,12 +49,12 @@ export default class UsersController {
     await request.validate(UserStoreValidator)
 
     const user = new User()
-    user.id = uuidv4()
+    user.id = crypto.randomUUID()
     user.email = request.input('email')
     user.password = await Hash.make(request.input('password'))
 
     user.related('profile').create({
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name: request.input('name'),
     })
 

@@ -3,7 +3,7 @@ import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import User from 'App/Models/User'
 import { returnResponseFormat } from 'App/Services/ResHelper'
 import UserStoreValidator from 'App/Validators/UserStoreValidator'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 
 const colAdminShow = ['id', 'email', 'created_at', 'updated_at']
 
@@ -33,7 +33,7 @@ export default class AdminsController {
     const email = request.input('email')
 
     User.create({
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       email,
       password,
     })

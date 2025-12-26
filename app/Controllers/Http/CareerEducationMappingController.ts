@@ -1,6 +1,6 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import CareerAvailable from 'App/Models/CareerAvailable'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import CareerEducationMapping from 'App/Models/CareerEducationMapping'
 import CareerEducationMappingValidator from 'App/Validators/CareerEducationMappingValidator'
 
@@ -65,7 +65,7 @@ export default class CareerEducationMappingController {
 
     const careerEducationMapping = await CareerEducationMapping.create({
       ...payload,
-      id: uuidv4(),
+      id: crypto.randomUUID(),
     })
 
     await Promise.all([

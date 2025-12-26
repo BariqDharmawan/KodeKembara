@@ -1,14 +1,14 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import SkillExperience from 'App/Models/SkillExperience'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 
 export default class SkillExperiencesController {
   public async store({ auth, request }: HttpContextContract) {
     const skillName = await SkillAvailable.findOrFail(request.input('skill_availables_id'))
 
     const addNewSkillExperience = new SkillExperience()
-    addNewSkillExperience.id = uuidv4()
+    addNewSkillExperience.id = crypto.randomUUID()
     addNewSkillExperience.user_uuid = auth.user!.id
     addNewSkillExperience.skill_availables_id = skillName.id
     addNewSkillExperience.month_of_experience = request.input('month_of_experience')

@@ -1,5 +1,5 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 
@@ -11,7 +11,7 @@ export default class SkillAvailablesController {
     isNewData = true
   ) {
     if (isNewData) {
-      modelToSave.id = uuidv4()
+      modelToSave.id = crypto.randomUUID()
     }
     modelToSave.name = request.input('name')
     modelToSave.save()

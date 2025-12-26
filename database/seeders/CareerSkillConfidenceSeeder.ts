@@ -2,12 +2,12 @@ import BaseSeeder from '@ioc:Adonis/Lucid/Seeder'
 import CareerSkillConfidence from 'App/Models/CareerSkillConfidence'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import CareerAvailable from 'App/Models/CareerAvailable'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import { faker } from '@faker-js/faker'
 
 const careerConfidence = (careerId: string, skillId: string) => {
   return {
-    id: uuidv4(),
+    id: crypto.randomUUID(),
     career_available_id: careerId,
     skill_availables_id: skillId,
   }

@@ -67,7 +67,6 @@
     "openai": "^4.20.1",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
-    "source-map-support": "^0.5.21",
-    "uuid": "^9.0.1"
+    "source-map-support": "^0.5.21"
   }
 }

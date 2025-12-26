@@ -1,14 +1,15 @@
 import { DateTime } from 'luxon'
 import { BaseModel, BelongsTo, belongsTo, column } from '@ioc:Adonis/Lucid/Orm'
+import crypto from 'node:crypto'
 import User from './User'
 import Educational from './Educational'
 
 export default class UserEducationalTaken extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id: crypto.UUID
 
   @column({ serializeAs: null })
-  public user_uuid: string
+  public user_uuid: crypto.UUID
 
   @column({ serializeAs: null })
   public educational_uuid: string

@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon'
 import { BaseModel, BelongsTo, belongsTo, column } from '@ioc:Adonis/Lucid/Orm'
+import crypto from 'node:crypto'
 import SkillAvailable from './SkillAvailable'
 
 export default class SkillConfidence extends BaseModel {
   @column({ isPrimary: true })
-  public id: number
+  public id: crypto.UUID
 
   @column()
   public confidence_score: number

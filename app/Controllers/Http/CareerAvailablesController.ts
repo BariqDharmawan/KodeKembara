@@ -1,9 +1,7 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import { DateTime } from 'luxon'
-import { schema, rules } from '@ioc:Adonis/Core/Validator'
-import TABLE_NAME from 'Contracts/constant'
 import CareerAvailableValidator from 'App/Validators/CareerAvailableValidator'
 
 export default class CareerAvailablesController {
@@ -24,7 +22,7 @@ export default class CareerAvailablesController {
     const payload = await request.validate(CareerAvailableValidator)
 
     const addNewCareerAvailable = new CareerAvailable()
-    addNewCareerAvailable.id = uuidv4()
+    addNewCareerAvailable.id = crypto.randomUUID()
     addNewCareerAvailable.title = payload.title
     addNewCareerAvailable.save()
 

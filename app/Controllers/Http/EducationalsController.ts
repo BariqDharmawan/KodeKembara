@@ -1,5 +1,5 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { v4 as uuidv4 } from 'uuid'
+import crypto from 'node:crypto'
 import Educational from 'App/Models/Educational'
 import { returnResponseFormat } from 'App/Services/ResHelper'
 import EducationStoreValidator from 'App/Validators/EducationStoreValidator'
@@ -16,7 +16,7 @@ export default class EducationalsController {
   public async store({ request, response }: HttpContextContract) {
     await request.validate(EducationStoreValidator)
     Educational.create({
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       level: String(request.input('level')).toUpperCase(),
     })
 
