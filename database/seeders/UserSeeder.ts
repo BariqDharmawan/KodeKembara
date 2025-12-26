@@ -8,8 +8,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { faker } from '@faker-js/faker'
 import SkillExperience from 'App/Models/SkillExperience'
 import SkillAvailable from 'App/Models/SkillAvailable'
-import CareerSkillConfidence from 'App/Models/CareerSkillConfidence'
-import CareerAvailable from 'App/Models/CareerAvailable'
 import UserEducationalTaken from 'App/Models/UserEducationalTaken'
 import { USER_DUMMY, TOTAL_USER_DUMMY } from 'Config/constant'
 import { TUserRole } from 'Contracts/types'
@@ -33,16 +31,10 @@ const addNewSkillExperience = (skillId: string, userId: string) => {
   }
 }
 
-const careerConfidence = (careerId: string, skillId: string) => {
-  return {
-    id: uuidv4(),
-    career_available_id: careerId,
-    skill_availables_id: skillId,
-  }
-}
 export default class extends BaseSeeder {
   public async run() {
-    const totalRandomCustomer = TOTAL_USER_DUMMY - USER_DUMMY.customer.length
+    const totalRandomCustomer =
+      TOTAL_USER_DUMMY - USER_DUMMY.admin.length - USER_DUMMY.customer.length
 
     const adminUsers = await Promise.all(
       USER_DUMMY.admin.map(
@@ -61,7 +53,7 @@ export default class extends BaseSeeder {
           id: uuidv4(),
           email,
           password: await Hash.make('password'),
-          role: 'user',
+          role: 'customer',
         })
       )
     )
@@ -72,13 +64,13 @@ export default class extends BaseSeeder {
       UserFactory.createMany(totalRandomCustomer),
     ])
 
-    const users = await User.query()
+    const customers = await User.query()
       .select('id')
-      .where('role', '!=', 'admin' as TUserRole)
+      .where('role', 'customer' as TUserRole)
 
     const skillAvailable = await SkillAvailable.query().select('id')
 
-    const userIds = users.map((user) => user.id)
+    const userIds = customers.map((user) => user.id)
     const skillIds = skillAvailable.map((skill) => skill.id)
 
     SkillExperience.createMany(
@@ -91,21 +83,6 @@ export default class extends BaseSeeder {
     )
 
     Profile.createMany(userIds.map((userId) => addProfile(userId)))
-
-    CareerAvailable.query()
-      .select('id')
-      .then((careers) => {
-        const careerAvailableIds = careers.map((career) => career.id)
-
-        CareerSkillConfidence.createMany(
-          skillIds.map((skillId) => {
-            return careerConfidence(
-              careerAvailableIds[faker.number.int({ min: 0, max: careerAvailableIds.length - 1 })],
-              skillId
-            )
-          })
-        )
-      })
 
     const educationalIds = (await Educational.query().select('id')).map(
       (educational) => educational.id

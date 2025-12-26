@@ -8,6 +8,6 @@ interface InterfaceCareerAvailable {
   title: string
 }
 
-type TUserRole = 'admin' | 'user'
+type TUserRole = 'admin' | 'customer'
 
 export { InterfaceResAPI, InterfaceCareerAvailable, TUserRole }

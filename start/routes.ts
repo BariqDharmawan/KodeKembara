@@ -51,7 +51,7 @@ Route.group(() => {
     .middleware(['auth', 'isAdmin'])
 
   Route.group(() => {
-    Route.get('/', 'UsersController.index').middleware(['auth', 'isAdmin'])
+    Route.get('/', 'UsersController.index')
     Route.get(':id', 'UsersController.show')
     Route.get(':id/skill-experiences', 'UsersController.listSkillExperience')
     Route.post('add', 'UsersController.store')

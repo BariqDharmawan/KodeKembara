@@ -8,7 +8,7 @@ import { TUserRole } from 'Contracts/types'
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  public static ROLE_USER: TUserRole[] = ['admin', 'user']
+  public static ROLE_USER: TUserRole[] = ['admin', 'customer']
 
   @column({ isPrimary: true })
   public id: string
