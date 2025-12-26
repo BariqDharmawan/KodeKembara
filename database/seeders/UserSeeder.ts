@@ -11,58 +11,71 @@ import SkillAvailable from 'App/Models/SkillAvailable'
 import CareerSkillConfidence from 'App/Models/CareerSkillConfidence'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import UserEducationalTaken from 'App/Models/UserEducationalTaken'
+import { USER_DUMMY, TOTAL_USER_DUMMY } from 'Config/constant'
+import { TUserRole } from 'Contracts/types'
 
+const addProfile = (userId: string) => {
+  return {
+    id: uuidv4(),
+    age: faker.number.int({ min: 15, max: 35 }),
+    current_job: faker.word.words(2),
+    name: faker.person.fullName(),
+    user_uuid: userId,
+  }
+}
+
+const addNewSkillExperience = (skillId: string, userId: string) => {
+  return {
+    id: uuidv4(),
+    month_of_experience: faker.number.int({ min: 3, max: 36 }),
+    skill_availables_id: skillId,
+    user_uuid: userId,
+  }
+}
+
+const careerConfidence = (careerId: string, skillId: string) => {
+  return {
+    id: uuidv4(),
+    career_available_id: careerId,
+    skill_availables_id: skillId,
+  }
+}
 export default class extends BaseSeeder {
   public async run() {
-    const educationAvailable = [
-      'SMK Rekayasa Perangkat Lunak',
-      'SMK Teknik Komputer Jaringan',
-      'SMK Multimedia',
-      'S1 Informatika',
-      'S1 Sistem Informasi',
-      'S1 Desain Komunikasi Visual',
-    ]
+    const totalRandomCustomer = TOTAL_USER_DUMMY - USER_DUMMY.customer.length
 
-    const addProfile = (userId: string) => {
-      return {
-        id: uuidv4(),
-        age: faker.number.int({ min: 15, max: 35 }),
-        current_job: faker.word.words(2),
-        name: faker.person.fullName(),
-        user_uuid: userId,
-      }
-    }
-
-    const addNewSkillExperience = (skillId: string, userId: string) => {
-      return {
-        id: uuidv4(),
-        month_of_experience: faker.number.int({ min: 3, max: 36 }),
-        skill_availables_id: skillId,
-        user_uuid: userId,
-      }
-    }
-
-    const careerConfidence = (careerId: string, skillId: string) => {
-      return {
-        id: uuidv4(),
-        career_available_id: careerId,
-        skill_availables_id: skillId,
-      }
-    }
-
-    await Promise.all([
-      User.createMany([
-        {
+    const adminUsers = await Promise.all(
+      USER_DUMMY.admin.map(
+        async (email): Promise<Partial<User>> => ({
           id: uuidv4(),
-          email: 'admin@kodekembara.com',
+          email,
           password: await Hash.make('password'),
           role: 'admin',
-        },
-      ]),
-      UserFactory.createMany(100),
+        })
+      )
+    )
+
+    const customerUsers = await Promise.all(
+      USER_DUMMY.customer.map(
+        async (email): Promise<Partial<User>> => ({
+          id: uuidv4(),
+          email,
+          password: await Hash.make('password'),
+          role: 'user',
+        })
+      )
+    )
+
+    await Promise.all([
+      User.createMany(adminUsers),
+      User.createMany(customerUsers),
+      UserFactory.createMany(totalRandomCustomer),
     ])
 
-    const users = await User.query().select('id').where('role', '!=', 'admin')
+    const users = await User.query()
+      .select('id')
+      .where('role', '!=', 'admin' as TUserRole)
+
     const skillAvailable = await SkillAvailable.query().select('id')
 
     const userIds = users.map((user) => user.id)
@@ -93,13 +106,6 @@ export default class extends BaseSeeder {
           })
         )
       })
-
-    await Educational.createMany(
-      educationAvailable.map((education) => ({
-        id: uuidv4(),
-        level: education,
-      }))
-    )
 
     const educationalIds = (await Educational.query().select('id')).map(
       (educational) => educational.id

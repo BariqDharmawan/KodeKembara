@@ -5,32 +5,13 @@ import SkillAvailable from 'App/Models/SkillAvailable'
 import { v4 as uuidv4 } from 'uuid'
 import { faker } from '@faker-js/faker'
 import SkillConfidence from 'App/Models/SkillConfidence'
+import { INITIAL_SKILL_AVAILABLE } from 'Config/constant'
 export default class extends BaseSeeder {
   public async run() {
-    const skillAvailable = [
-      'Golang',
-      'NodeJS',
-      'Java',
-      'PHP',
-      'Typescript',
-      'Docker',
-      'React',
-      'Flutter',
-      'Kotlin',
-      'Swift',
-      'Springboot',
-      'Apache Kafka',
-      'GraphQL',
-      'Javascript',
-      'HTML/CSS',
-      'Python',
-    ]
-
     const careerIds = (await CareerAvailable.all()).map((career) => career.id)
-    console.log('careerIds', careerIds)
 
     await SkillAvailable.createMany(
-      skillAvailable.map((eachSkill) => ({
+      INITIAL_SKILL_AVAILABLE.map((eachSkill) => ({
         id: uuidv4(),
         name: eachSkill,
       }))

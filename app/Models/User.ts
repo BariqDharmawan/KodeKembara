@@ -3,11 +3,12 @@ import { BaseModel, HasMany, HasOne, column, hasMany, hasOne } from '@ioc:Adonis
 import Profile from './Profile'
 import SkillExperience from './SkillExperience'
 import UserEducationalTaken from './UserEducationalTaken'
+import { TUserRole } from 'Contracts/types'
 
 export default class User extends BaseModel {
   public static selfAssignPrimaryKey = true
 
-  public static ROLE_USER = ['admin', 'user']
+  public static ROLE_USER: TUserRole[] = ['admin', 'user']
 
   @column({ isPrimary: true })
   public id: string
@@ -22,7 +23,7 @@ export default class User extends BaseModel {
   public password: string
 
   @column()
-  public role: string
+  public role: TUserRole
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   public updatedAt: DateTime
