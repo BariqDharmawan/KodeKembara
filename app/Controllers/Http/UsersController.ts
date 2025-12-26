@@ -28,7 +28,7 @@ export default class UsersController {
       ...user.toJSON(),
       profile: {
         ...user.profile.toJSON(),
-        educational: educationalTaken,
+        educational: educationalTaken.map((educational) => educational.educational),
       },
     }
   }

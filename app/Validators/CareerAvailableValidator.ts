@@ -1,6 +1,6 @@
 import { schema, rules, CustomMessages } from '@ioc:Adonis/Core/Validator'
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import TABLE_NAME from 'Contracts/constant'
+import { TABLE_NAME } from 'Config/constant'
 
 export default class CareerAvailableValidator {
   constructor(protected ctx: HttpContextContract) {}

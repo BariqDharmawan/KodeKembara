@@ -1,5 +1,5 @@
 import BaseSchema from '@ioc:Adonis/Lucid/Schema'
-import TABLE_NAME from 'Contracts/constant'
+import { TABLE_NAME } from 'Config/constant'
 
 export default class extends BaseSchema {
   protected tableName = TABLE_NAME.educationals
