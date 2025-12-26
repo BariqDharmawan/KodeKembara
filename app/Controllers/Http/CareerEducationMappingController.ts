@@ -31,16 +31,12 @@ export default class CareerEducationMappingController {
     ])
 
     const formattedEducations = educationMappings.map((mapping) => ({
-      id: mapping.id,
       belief_weight: mapping.belief_weight,
       educational: mapping.educational.level,
     }))
 
     return response.json({
-      career: {
-        id: careerAvailable.id,
-        title: careerAvailable.title,
-      },
+      career: careerAvailable.title,
       educations: formattedEducations,
     })
   }
