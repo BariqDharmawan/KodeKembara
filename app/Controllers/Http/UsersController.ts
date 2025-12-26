@@ -68,13 +68,15 @@ export default class UsersController {
   }
 
   public async update({ request, response, auth }: HttpContextContract) {
-    const educationLevel = await Educational.find(request.input('educational_level_id'))
+    const id = request.input('educational_level_id')
+
+    const educationLevel = await Educational.find(id)
 
     if (!educationLevel) {
       return response.status(500).json(
         returnResponseFormat({
           code: 500,
-          message: 'Education level not found',
+          message: `Data Education with id ${id} not found`,
         })
       )
     }
