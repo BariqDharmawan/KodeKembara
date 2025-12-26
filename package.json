@@ -61,10 +61,9 @@
     "@adonisjs/i18n": "1.6.0",
     "@adonisjs/lucid": "^18.4.2",
     "@adonisjs/repl": "^3.1.0",
-    "adonis-autoswagger": "^1.10.1",
+    "@supercharge/strings": "^2.0.0",
     "luxon": "^3.4.3",
     "mysql2": "^3.6.2",
-    "openai": "^4.20.1",
     "proxy-addr": "^2.0.7",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.21"

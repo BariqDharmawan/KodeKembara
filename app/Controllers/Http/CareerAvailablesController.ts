@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import { DateTime } from 'luxon'
 import CareerAvailableValidator from 'App/Validators/CareerAvailableValidator'
+import Str from '@supercharge/strings'
 
 export default class CareerAvailablesController {
   /**
@@ -14,8 +15,22 @@ export default class CareerAvailablesController {
     return await CareerAvailable.query().whereNull('deleted_at')
   }
 
-  public async show({ params }: HttpContextContract) {
-    return await CareerAvailable.findOrFail(params.id)
+  public async show({ params, response }: HttpContextContract) {
+    if (!Str(params.id).isUuid()) {
+      return response.status(400).json({
+        message: `ID is not UUID. Current id: ${params.id}`,
+      })
+    }
+
+    const eachCareer = await CareerAvailable.find(params.id)
+
+    if (!eachCareer) {
+      return response.status(404).json({
+        message: `Career with id '${params.id}' not found`,
+      })
+    }
+
+    return eachCareer
   }
 
   public async store({ request, response }: HttpContextContract) {
@@ -69,6 +84,6 @@ export default class CareerAvailablesController {
   }
 
   public async getDeleted() {
-    return await CareerAvailable.query().whereNotNull('deleted_at')
+    return await CareerAvailable.all()
   }
 }
