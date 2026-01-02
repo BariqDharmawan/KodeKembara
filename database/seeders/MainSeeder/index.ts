@@ -6,13 +6,15 @@ export default class extends BaseSeeder {
   }
 
   public async run() {
-    await this.runSeeder(await import('../CareerAvailableSeeder'))
-    await this.runSeeder(await import('../EducationalSeeder'))
+    await Promise.all([
+      this.runSeeder(await import('../UserSeeder')),
+      this.runSeeder(await import('../CareerAvailableSeeder')),
+      this.runSeeder(await import('../EducationalSeeder')),
+    ])
+
     await this.runSeeder(await import('../SkillAvailableSeeder'))
-    await this.runSeeder(await import('../UserSeeder'))
     await this.runSeeder(await import('../UserEducationSeeder'))
     await this.runSeeder(await import('../SkillExperienceSeeder'))
-    // await this.runSeeder(await import('../CareerSkillConfidenceSeeder'))
     await this.runSeeder(await import('../CareerEducationMappingSeeder'))
     await this.runSeeder(await import('../CareerSkillMappingSeeder'))
   }
