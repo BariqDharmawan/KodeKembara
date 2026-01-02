@@ -13,14 +13,6 @@ Route.group(() => {
     Route.get('/', 'CareerAvailablesController.index')
     Route.get('deleted', 'CareerAvailablesController.getDeleted').middleware(['auth', 'isAdmin'])
     Route.get(':id', 'CareerAvailablesController.show')
-    Route.get(
-      ':careerId/skill-requirements',
-      'CareerSkillRequirementsController.getSkillRequirements'
-    )
-    Route.delete(
-      ':careerId/skill-requirements',
-      'CareerSkillRequirementsController.deleteSkillRequirements'
-    )
 
     Route.group(() => {
       Route.post('/', 'CareerAvailablesController.store')
@@ -39,7 +31,6 @@ Route.group(() => {
       Route.put(':id', 'SkillAvailablesController.update')
       Route.delete(':id', 'SkillAvailablesController.destroy')
       Route.get('deleted', 'SkillAvailablesController.getDeleted')
-      Route.get(':id/careers', 'SkillAvailablesController.getCareerBySkill')
     }).middleware(['auth', 'isAdmin'])
   }).prefix('skill-availables')
 
