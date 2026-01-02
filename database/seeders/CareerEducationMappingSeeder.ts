@@ -22,6 +22,7 @@ export default class extends BaseSeeder {
           career_available_id: career.id,
           educational_id: educational.id,
           belief_weight: parseFloat(Math.random().toFixed(2)),
+          explain: `${career.title} needs education ${educational.level} because ideally in ${educational.level} there is specific skill blablabla`,
         })
       }
     }

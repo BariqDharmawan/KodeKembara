@@ -58,6 +58,7 @@ export default class CareerEducationMappingController {
           ? educationMappings.value.map((mapping) => ({
               belief_weight: mapping.belief_weight,
               educational: mapping.educational.level,
+              explaination: mapping.explain,
             }))
           : 'No education needed',
     })
@@ -92,7 +93,12 @@ export default class CareerEducationMappingController {
 
     return response.status(201).json({
       message: `Successfully mapping career ${careerEducationMapping.careerAvailable.title} with education ${careerEducationMapping.educational.level}`,
-      data: careerEducationMapping,
+      data: {
+        career: careerEducationMapping.careerAvailable.title,
+        education: careerEducationMapping.educational.level,
+        belief_weight: careerEducationMapping.belief_weight,
+        explain: careerEducationMapping.explain,
+      },
     })
   }
 }

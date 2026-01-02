@@ -15,6 +15,12 @@ export default class CareerEducationMappingValidator {
       rules.uuid(),
     ]),
     belief_weight: schema.number([rules.range(0, 1)]),
+    explain: schema.string.optional(
+      {
+        trim: true,
+      },
+      [rules.minLength(3)]
+    ),
   })
 
   public messages: CustomMessages = {
@@ -29,5 +35,7 @@ export default class CareerEducationMappingValidator {
     'belief_weight.required': 'Belief weight is required',
     'belief_weight.number': 'Belief weight must be a number',
     'belief_weight.range': 'Belief weight must be between 0 and 1',
+
+    'explain.minLength': 'Explaination must be at least 3 characters',
   }
 }

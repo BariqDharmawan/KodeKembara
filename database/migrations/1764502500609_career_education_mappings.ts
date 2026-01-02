@@ -10,6 +10,7 @@ export default class extends BaseSchema {
       table.uuid('career_available_id')
       table.uuid('educational_id')
       table.float('belief_weight')
+      table.text('explain').nullable()
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })

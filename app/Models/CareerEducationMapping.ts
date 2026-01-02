@@ -31,4 +31,7 @@ export default class CareerEducationMapping extends BaseModel {
     foreignKey: 'educational_id',
   })
   public educational: BelongsTo<typeof Educational>
+
+  @column()
+  public explain: string
 }
