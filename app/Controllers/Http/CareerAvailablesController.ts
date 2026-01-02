@@ -6,11 +6,6 @@ import CareerAvailableValidator from 'App/Validators/CareerAvailableValidator'
 import Str from '@supercharge/strings'
 
 export default class CareerAvailablesController {
-  /**
-   * @index
-   * @summary Get list of career available
-   * @description Return array of career available
-   */
   public async index() {
     return await CareerAvailable.query().whereNull('deleted_at')
   }
@@ -39,6 +34,7 @@ export default class CareerAvailablesController {
     const addNewCareerAvailable = new CareerAvailable()
     addNewCareerAvailable.id = crypto.randomUUID()
     addNewCareerAvailable.title = payload.title
+    addNewCareerAvailable.desc = payload.desc
     addNewCareerAvailable.save()
 
     return response.json({
@@ -50,6 +46,7 @@ export default class CareerAvailablesController {
   public async update({ request, params, response }: HttpContextContract) {
     const updateCareerAvailable = await CareerAvailable.findOrFail(params.id)
     updateCareerAvailable.title = request.input('title')
+    updateCareerAvailable.desc = request.input('desc')
     updateCareerAvailable.save()
 
     return response.status(201).json({
@@ -67,14 +64,14 @@ export default class CareerAvailablesController {
       if (!deleteCareerAvailable) {
         throw {
           status: 404,
-          message: 'Career available not found',
+          message: `Career with id ${params.id} not found`,
         }
       }
-      deleteCareerAvailable.deletedAt = DateTime.now()
+      deleteCareerAvailable.deletedAt = new Date()
       deleteCareerAvailable.save()
 
       return response.status(200).json({
-        message: 'Successfully delete career available',
+        message: `Successfully delete career called ${deleteCareerAvailable.title}`,
       })
     } catch (error) {
       return response.status(error.status).json({
@@ -84,6 +81,6 @@ export default class CareerAvailablesController {
   }
 
   public async getDeleted() {
-    return await CareerAvailable.all()
+    return await CareerAvailable.query().whereNotNull('deleted_at')
   }
 }
