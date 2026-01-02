@@ -10,9 +10,9 @@ export default class extends BaseSeeder {
       this.runSeeder(await import('../UserSeeder')),
       this.runSeeder(await import('../CareerAvailableSeeder')),
       this.runSeeder(await import('../EducationalSeeder')),
+      this.runSeeder(await import('../SkillAvailableSeeder')),
     ])
 
-    await this.runSeeder(await import('../SkillAvailableSeeder'))
     await this.runSeeder(await import('../UserEducationSeeder'))
     await this.runSeeder(await import('../SkillExperienceSeeder'))
     await this.runSeeder(await import('../CareerEducationMappingSeeder'))
