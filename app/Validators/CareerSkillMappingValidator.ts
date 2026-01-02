@@ -21,11 +21,11 @@ export default class CareerSkillMappingValidator {
   public messages: CustomMessages = {
     'career_available_id.required': 'Career ID is required',
     'career_available_id.uuid': 'Career ID must be a valid UUID',
-    'career_available_id.exists': 'Career does not exist',
+    'career_available_id.exists': `Career with ID '${this.ctx.request.input('career_available_id')}' does not exist`,
 
     'skill_available_id.required': 'Skill ID is required',
     'skill_available_id.uuid': 'Skill ID must be a valid UUID',
-    'skill_available_id.exists': 'Skill does not exist',
+    'skill_available_id.exists': `Skill with ID '${this.ctx.request.input('skill_available_id')}' does not exist`,
 
     'belief_weight.required': 'Belief weight is required',
     'belief_weight.number': 'Belief weight must be a number',
