@@ -19,6 +19,7 @@ export default class UsersController {
       .where('id', params.id)
       .orWhere('email', params.id)
       .preload('profile')
+      .preload('skillExperience', (query) => query.preload('skillName'))
       .firstOrFail()
 
     const educationalTaken = await UserEducationalTaken.query()
@@ -31,13 +32,16 @@ export default class UsersController {
         ...user.profile.toJSON(),
         educational: educationalTaken.map((educational) => educational.educational),
       },
+      skillExperience: user.skillExperience.map((skillExperience) => ({
+        skillName: skillExperience.skillName.name,
+        month_of_experience: skillExperience.month_of_experience,
+      })),
     }
   }
 
   public async listSkillExperience({ params }: HttpContextContract) {
     const skillExperienceByUser = await SkillExperience.query()
       .where('user_uuid', params.id)
-      // .select('id', 'month_of_experience', 'created_at', 'updated_at')
       .preload('skillName')
 
     return {

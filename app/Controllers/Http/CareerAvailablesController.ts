@@ -67,7 +67,7 @@ export default class CareerAvailablesController {
           message: `Career with id ${params.id} not found`,
         }
       }
-      deleteCareerAvailable.deletedAt = new Date()
+      deleteCareerAvailable.deletedAt = DateTime.now()
       deleteCareerAvailable.save()
 
       return response.status(200).json({
