@@ -72,11 +72,6 @@ Route.group(() => {
     .middleware('auth')
 
   Route.group(() => {
-    Route.get('/', 'CareerSkillConfidencesController.index')
-    Route.get(':id', 'CareerSkillConfidencesController.show')
-  }).prefix('career-confidence')
-
-  Route.group(() => {
     Route.get('/', 'EducationalsController.index')
     Route.get(':id', 'EducationalsController.show')
     Route.post('/', 'EducationalsController.store')

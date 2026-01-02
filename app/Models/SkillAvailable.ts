@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
-import { BaseModel, HasOne, ManyToMany, column, hasOne, manyToMany } from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, ManyToMany, column, manyToMany } from '@ioc:Adonis/Lucid/Orm'
 import CareerAvailable from './CareerAvailable'
-import SkillConfidence from './SkillConfidence'
 
 export default class SkillAvailable extends BaseModel {
   @column({ isPrimary: true })
@@ -15,12 +14,6 @@ export default class SkillAvailable extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true, serializeAs: null })
   public updatedAt: DateTime
-
-  @hasOne(() => SkillConfidence, {
-    localKey: 'id',
-    foreignKey: 'skill_availables_id',
-  })
-  public skillConfidence: HasOne<typeof SkillConfidence>
 
   @manyToMany(() => CareerAvailable, {
     pivotTable: 'career_skill_requirements',

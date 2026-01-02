@@ -4,7 +4,6 @@ import CareerSkillRequirement from 'App/Models/CareerSkillRequirement'
 import SkillAvailable from 'App/Models/SkillAvailable'
 import crypto from 'node:crypto'
 import { faker } from '@faker-js/faker'
-import SkillConfidence from 'App/Models/SkillConfidence'
 import { INITIAL_SKILL_AVAILABLE } from 'Config/constant'
 export default class extends BaseSeeder {
   public async run() {
@@ -34,14 +33,6 @@ export default class extends BaseSeeder {
         id: crypto.randomUUID(),
         skill_availables_id: skillId,
         minimum_month_experience: faker.number.int({ min: 1, max: 100 }),
-      }))
-    )
-
-    await SkillConfidence.createMany(
-      skillIds.map((skillId) => ({
-        id: crypto.randomUUID(),
-        skill_availables_id: skillId,
-        confidence_score: faker.number.float({ min: 0.1, max: 0.9 }),
       }))
     )
   }
