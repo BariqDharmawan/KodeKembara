@@ -129,4 +129,26 @@ export default class UsersController {
     }
     return (await User.findOrFail(params.id)).delete()
   }
+
+  public async removeEducationTaken({ auth, params, response }: HttpContextContract) {
+    const educationToRemove = await Educational.findOrFail(params.id)
+
+    const [currentUserEducation, educationalTaken] = await Promise.all([
+      UserEducationalTaken.query()
+        .where('user_uuid', auth.user!.id)
+        .where('educational_uuid', params.id)
+        .first(),
+      UserEducationalTaken.query().where('user_uuid', auth.user!.id).preload('educational'),
+    ])
+
+    if (!currentUserEducation) {
+      return response.status(500).json({
+        code: 500,
+        message: `You dont have education ${educationToRemove.level}`,
+        your_education: educationalTaken.map((educational) => educational.educational.level),
+      })
+    }
+
+    return currentUserEducation.delete()
+  }
 }

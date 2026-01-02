@@ -50,6 +50,7 @@ Route.group(() => {
 
     Route.group(() => {
       Route.put('update', 'UsersController.update')
+      Route.delete('delete-education-taken/:id', 'UsersController.removeEducationTaken')
       Route.delete(':id', 'UsersController.destroy')
       Route.put('change-password', 'UsersController.changePassword')
     }).middleware('auth')
