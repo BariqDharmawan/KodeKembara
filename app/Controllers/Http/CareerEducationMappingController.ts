@@ -3,6 +3,7 @@ import CareerAvailable from 'App/Models/CareerAvailable'
 import crypto from 'node:crypto'
 import CareerEducationMapping from 'App/Models/CareerEducationMapping'
 import CareerEducationMappingValidator from 'App/Validators/CareerEducationMappingValidator'
+import { getCodeError, getMsgError } from 'Config/errorHandler'
 
 export default class CareerEducationMappingController {
   public async index() {
@@ -22,7 +23,7 @@ export default class CareerEducationMappingController {
   public async show({ response, params }: HttpContextContract) {
     const careerID = params.id
 
-    const [careerAvailable, educationMappings] = await Promise.all([
+    const [careerAvailable, educationMappings] = await Promise.allSettled([
       CareerAvailable.findOrFail(careerID),
       CareerEducationMapping.query()
         .where('career_available_id', careerID)
@@ -30,14 +31,35 @@ export default class CareerEducationMappingController {
         .orderBy('belief_weight', 'desc'),
     ])
 
-    const formattedEducations = educationMappings.map((mapping) => ({
-      belief_weight: mapping.belief_weight,
-      educational: mapping.educational.level,
-    }))
+    if (careerAvailable.status === 'rejected') {
+      return response.status(getCodeError(careerAvailable)).json({
+        code: getCodeError(careerAvailable),
+        message:
+          getCodeError(careerAvailable) === 404
+            ? `Career with ID ${careerID} not found`
+            : getMsgError(careerAvailable),
+      })
+    }
+
+    if (educationMappings.status === 'rejected') {
+      return response.status(getCodeError(educationMappings)).json({
+        code: getCodeError(educationMappings),
+        message:
+          getCodeError(educationMappings) === 404
+            ? `Education mapping with career ID ${careerID} not found`
+            : getMsgError(educationMappings),
+      })
+    }
 
     return response.json({
-      career: careerAvailable.title,
-      educations: formattedEducations,
+      career: careerAvailable.value.title,
+      educations:
+        educationMappings.value.length > 0
+          ? educationMappings.value.map((mapping) => ({
+              belief_weight: mapping.belief_weight,
+              educational: mapping.educational.level,
+            }))
+          : 'No education needed',
     })
   }
 
@@ -53,6 +75,7 @@ export default class CareerEducationMappingController {
 
     if (careerEducationExist) {
       return response.status(409).json({
+        code: 409,
         errors: `Mapping between career '${careerEducationExist.careerAvailable.title}' and education '${careerEducationExist.educational.level}' already exists.`,
       })
     }

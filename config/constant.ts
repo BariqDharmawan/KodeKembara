@@ -57,6 +57,7 @@ const TABLE_NAME = {
   user_educational_takens: 'user_educational_takens',
   skill_confidences: 'skill_confidences',
   career_education_mappings: 'career_education_mappings',
+  career_skill_mappings: 'career_skill_mappings',
 }
 
 export {
