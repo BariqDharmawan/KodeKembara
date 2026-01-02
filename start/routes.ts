@@ -91,6 +91,7 @@ Route.group(() => {
     .prefix('career-education-mapping')
 
   Route.group(() => {
+    Route.get('/', 'CareerSkillMappingController.index')
     Route.get('career/:id', 'CareerSkillMappingController.show')
     Route.post('/', 'CareerSkillMappingController.store')
     Route.delete('career/:careerId/skill/:skillId', 'CareerSkillMappingController.destroy')

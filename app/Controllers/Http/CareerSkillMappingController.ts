@@ -6,6 +6,27 @@ import CareerSkillMappingValidator from 'App/Validators/CareerSkillMappingValida
 import { getCodeError, getMsgError } from 'Config/errorHandler'
 
 export default class CareerSkillMappingController {
+  public async index() {
+    const skillMappings = await CareerSkillMapping.query()
+      .preload('careerAvailable')
+      .preload('skillAvailable')
+      .orderBy('belief_weight', 'desc')
+
+    return skillMappings.map((skillMapping) => ({
+      id: skillMapping.id,
+      career: {
+        id: skillMapping.careerAvailable.id,
+        title: skillMapping.careerAvailable.title,
+      },
+      skill: {
+        name: skillMapping.skillAvailable.name,
+        id: skillMapping.skillAvailable.id,
+      },
+      belief_weight: skillMapping.belief_weight,
+      min_experience_months: skillMapping.min_experience_months,
+    }))
+  }
+
   public async show({ response, params }: HttpContextContract) {
     const careerID = params.id
 
@@ -38,6 +59,7 @@ export default class CareerSkillMappingController {
     }
 
     return response.json({
+      id: careerAvailable.value.id,
       career: careerAvailable.value.title,
       skills: skillMappings.value,
     })

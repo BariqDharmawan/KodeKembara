@@ -6,7 +6,7 @@ export default class extends BaseSchema {
 
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
-      table.uuid('id', { primaryKey: true }).notNullable().index()
+      table.uuid('id', { primaryKey: true }).primary().notNullable().index()
       table.uuid('career_available_id').notNullable().index()
       table.uuid('skill_available_id').notNullable().index()
       table.float('belief_weight').notNullable()
