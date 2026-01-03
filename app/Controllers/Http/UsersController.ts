@@ -7,6 +7,7 @@ import { returnResponseFormat } from 'App/Services/ResHelper'
 import UserStoreValidator from 'App/Validators/UserStoreValidator'
 import SkillExperience from 'App/Models/SkillExperience'
 import UserEducationalTaken from 'App/Models/UserEducationalTaken'
+import UserUpdateValidator from 'App/Validators/UserUpdateValidator'
 
 export default class UsersController {
   public async index() {
@@ -71,26 +72,43 @@ export default class UsersController {
     )
   }
 
-  public async update({ request, response, auth }: HttpContextContract) {
-    const id = request.input('educational_level_id')
+  private async checkEducationTakenEachUser(ids: string[], userLoggedIn: User) {
+    const educationalTaken = await UserEducationalTaken.query()
+      .where('user_uuid', userLoggedIn.id)
+      .preload('educational')
+      .whereIn('educational_uuid', ids)
 
-    const educationLevel = await Educational.find(id)
+    return educationalTaken.map((educational) => educational.educational)
+  }
 
-    if (!educationLevel) {
-      return response.status(500).json(
-        returnResponseFormat({
-          code: 500,
-          message: `Data Education with id ${id} not found`,
-        })
-      )
+  public async update({ request, auth, response }: HttpContextContract) {
+    const payload = await request.validate(UserUpdateValidator)
+
+    const idEducationals = request.input('educational_level_id')
+
+    const userEducation = await this.checkEducationTakenEachUser(idEducationals, auth.user!)
+
+    if (userEducation.length > 0) {
+      return response.status(403).json({
+        code: 403,
+        message: `You already have education ${userEducation.map((each) => each.level).join(', ')}`,
+      })
     }
+
+    const dataToCreate = idEducationals.map((eachId: string) => ({
+      id: crypto.randomUUID(),
+      user_uuid: auth.user!.id,
+      educational_uuid: eachId,
+    }))
+
+    await UserEducationalTaken.createMany(dataToCreate)
 
     await auth.user!.load('profile')
 
-    auth
+    await auth
       .user!.profile.merge({
-        age: request.input('age'),
-        current_job: request.input('current_job') || '',
+        age: payload.age,
+        current_job: payload.current_job,
       })
       .save()
 

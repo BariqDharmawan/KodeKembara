@@ -3,12 +3,7 @@ import DempsterShaferService from 'App/Services/DempsterShaferService'
 
 export default class RecommendationsController {
   public async calculate({ response, auth }: HttpContextContract) {
-    const user = auth.user
-
-    // Should be handled by middleware, but double check
-    if (!user) {
-      return response.unauthorized({ message: 'User not logged in' })
-    }
+    const user = auth.user!
 
     const service = new DempsterShaferService()
     const recommendations = await service.calculateCandidates(user.id)

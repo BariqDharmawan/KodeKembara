@@ -10,7 +10,7 @@ export default class extends BaseSchema {
       table.uuid('id', { primaryKey: true }).primary()
       table.string('email').notNullable().unique()
       table.string('password').notNullable()
-      table.enum('role', User.ROLE_USER).notNullable()
+      table.enum('role', User.ROLE_USER).notNullable().defaultTo(User.ROLE_USER[1])
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })

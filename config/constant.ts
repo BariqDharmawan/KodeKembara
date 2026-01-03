@@ -60,7 +60,10 @@ const TABLE_NAME = {
   career_skill_mappings: 'career_skill_mappings',
 }
 
+const MAX_BELIEF_WEIGHT = 0.99
+
 export {
+  MAX_BELIEF_WEIGHT,
   TABLE_NAME,
   EDUCATION_AVAILABLE,
   USER_DUMMY,

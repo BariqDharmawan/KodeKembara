@@ -5,7 +5,6 @@ export default class UserStoreValidator {
   constructor(protected ctx: HttpContextContract) {}
 
   public schema = schema.create({
-    id: schema.string({ trim: true }, [rules.required(), rules.uuid()]),
     email: schema.string({ trim: true }, [
       rules.unique({ table: 'users', column: 'email' }),
       rules.email(),
@@ -13,5 +12,7 @@ export default class UserStoreValidator {
     ]),
   })
 
-  public messages: CustomMessages = {}
+  public messages: CustomMessages = {
+    'email.unique': `Email ${this.ctx.request.input('email')} already exists`,
+  }
 }
