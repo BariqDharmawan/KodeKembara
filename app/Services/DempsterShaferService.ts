@@ -4,7 +4,7 @@ import SkillExperience from 'App/Models/SkillExperience'
 import UserEducationalTaken from 'App/Models/UserEducationalTaken'
 import User from 'App/Models/User'
 import CareerAvailable from 'App/Models/CareerAvailable'
-
+import { MAX_BELIEF_WEIGHT } from 'Config/constant'
 type MassFunction = {
   // Map of CareerUUID -> Mass Value
   values: Map<string, number>
@@ -53,154 +53,137 @@ export default class DempsterShaferService {
       .preload('careerAvailable')
       .preload('educational')
 
-    // 2. Initialize Accumulator Mass
-    // Initially m(THETA) = 1.0, everything else 0
-    let accumulatedMass: MassFunction = {
-      values: new Map(),
-      theta: 1.0,
-    }
-
-    // Track supporting evidence for final output
-    const evidenceMap = new Map<
+    // 2. Group evidence by career
+    const careerEvidenceMap = new Map<
       string,
-      { skills: Set<string>; education: Set<string>; current_job?: string }
+      {
+        skillMappings: typeof skillMappings
+        eduMappings: typeof eduMappings
+        currentJob?: string
+        careerTitle?: string
+      }
     >()
 
-    // Helper to get or create evidence tracker
-    const trackEvidence = (careerId: string, type: 'skill' | 'edu' | 'job', name: string) => {
-      if (!evidenceMap.has(careerId)) {
-        evidenceMap.set(careerId, { skills: new Set(), education: new Set() })
-      }
-      if (type === 'skill') evidenceMap.get(careerId)!.skills.add(name)
-      if (type === 'edu') evidenceMap.get(careerId)!.education.add(name)
-      if (type === 'job') evidenceMap.get(careerId)!.current_job = name
-    }
-
-    // 3. Process Skill Evidence
+    // Group skill mappings by career
     for (const mapping of skillMappings) {
-      // Each mapping is a piece of evidence supporting ONE career
-      // m({C}) = weight, m(THETA) = 1 - weight
-      // Clamp weight
-      const weight = Math.max(0, Math.min(1, mapping.belief_weight))
-
-      const newMass: MassFunction = {
-        values: new Map([[mapping.career_available_id, weight]]),
-        theta: 1.0 - weight,
+      if (!careerEvidenceMap.has(mapping.career_available_id)) {
+        careerEvidenceMap.set(mapping.career_available_id, {
+          skillMappings: [],
+          eduMappings: [],
+          careerTitle: mapping.careerAvailable.title,
+        })
       }
-
-      accumulatedMass = this.combine(accumulatedMass, newMass)
-      trackEvidence(mapping.career_available_id, 'skill', mapping.skillAvailable.name)
+      careerEvidenceMap.get(mapping.career_available_id)!.skillMappings.push(mapping)
     }
 
-    // 4. Process Education Evidence
+    // Group education mappings by career
     for (const mapping of eduMappings) {
-      const weight = Math.max(0, Math.min(1, mapping.belief_weight))
-
-      const newMass: MassFunction = {
-        values: new Map([[mapping.career_available_id, weight]]),
-        theta: 1.0 - weight,
+      if (!careerEvidenceMap.has(mapping.career_available_id)) {
+        careerEvidenceMap.set(mapping.career_available_id, {
+          skillMappings: [],
+          eduMappings: [],
+          careerTitle: mapping.careerAvailable.title,
+        })
       }
-
-      accumulatedMass = this.combine(accumulatedMass, newMass)
-      trackEvidence(mapping.career_available_id, 'edu', mapping.educational.level)
+      careerEvidenceMap.get(mapping.career_available_id)!.eduMappings.push(mapping)
+      // Set title if not already set
+      if (!careerEvidenceMap.get(mapping.career_available_id)!.careerTitle) {
+        careerEvidenceMap.get(mapping.career_available_id)!.careerTitle =
+          mapping.careerAvailable.title
+      }
     }
 
-    // 5. Process Current Job Evidence (if applicable)
-    // Optimization: Only search if currentJob is non-empty
+    // Process current job
     if (currentJob) {
-      // Find matching career by title (case-insensitive)
-      // Note: This matches substring or exact match depending on requirement.
-      // Assuming EXACT match or close match for robust evidence.
-      // We will perform a DB exact/ILIKE match or fetch all and Find.
-      // Since mapping is via ID, we need to find the ID of the career that matches the job title.
-      // We'll trust the database level ILIKE search is better, but here we can just do a simple lookup if cached or query.
-
       const matchingCareer = await CareerAvailable.query()
         .whereRaw('LOWER(title) = ?', [currentJob.toLowerCase()])
         .first()
 
       if (matchingCareer) {
-        // High belief weight for current job (e.g. 0.9)
-        const jobWeight = 0.9
-        const newMass: MassFunction = {
-          values: new Map([[matchingCareer.id, jobWeight]]),
-          theta: 1.0 - jobWeight,
+        if (!careerEvidenceMap.has(matchingCareer.id)) {
+          careerEvidenceMap.set(matchingCareer.id, {
+            skillMappings: [],
+            eduMappings: [],
+            careerTitle: matchingCareer.title,
+          })
         }
-        accumulatedMass = this.combine(accumulatedMass, newMass)
-        trackEvidence(matchingCareer.id, 'job', currentJob)
+        careerEvidenceMap.get(matchingCareer.id)!.currentJob = currentJob
       }
     }
 
-    // 6. Calculate Belief and Plausibility
-    // Belief({C}) = m({C})
-    // Plausibility({C}) = m({C}) + m(THETA)
-
-    const uniqueCareers = new Set<string>()
-    // We need career details.
-    const careerDetails = new Map<string, string>()
-
-    for (const m of skillMappings) {
-      uniqueCareers.add(m.career_available_id)
-      careerDetails.set(m.career_available_id, m.careerAvailable.title)
-    }
-    for (const m of eduMappings) {
-      uniqueCareers.add(m.career_available_id)
-      careerDetails.set(m.career_available_id, m.careerAvailable.title)
-    }
-    // Also include the career from current job logic if it wasn't already in mappings
-    if (currentJob) {
-      // We need to fetch it again or store it earlier if we want to ensure it's in the list
-      // Optimization: The trackEvidence already sets the map. We can iterate the map keys.
-    }
-    // Better: Iterate evidenceMap keys to get all unique careers encountered
-    for (const careerId of evidenceMap.keys()) {
-      uniqueCareers.add(careerId)
-      // If we don't have title yet (e.g. only from Current Job), we need to fetch or set it.
-      if (!careerDetails.has(careerId)) {
-        // We might need to fetch it if it came ONLY from current job match and wasn't in mappings.
-        // But in the current job block we found matchingCareer, so we can set it there?
-        // Let's refactor slightly to ensure we have the title.
-      }
-    }
-
-    // Quick Fix: Pre-fill careerDetails in the Current Job block
-    // I need to access matchingCareer from outside or re-query if needed?
-    // Wait, the easiest way is to push to careerDetails when we find matchingCareer.
-
-    // Re-implementing just the loop part below to use evidenceMap keys + efficient title lookup
-
-    // ... (re-fetching missing titles if any) ...
-    // To make it robust:
-    const allCareerIds = Array.from(evidenceMap.keys())
-    const missingTitles = allCareerIds.filter((id) => !careerDetails.has(id))
-
-    if (missingTitles.length > 0) {
-      const found = await CareerAvailable.query().whereIn('id', missingTitles)
-      for (const f of found) {
-        careerDetails.set(f.id, f.title)
-      }
-    }
-
+    // 3. Calculate belief for EACH career independently
     const results: RecommendationResult[] = []
 
-    for (const careerId of allCareerIds) {
-      const massCareer = accumulatedMass.values.get(careerId) || 0
-      const belief = massCareer
-      const plausibility = massCareer + accumulatedMass.theta
+    for (const [careerId, evidence] of careerEvidenceMap.entries()) {
+      // Start fresh for each career
+      let careerMass: MassFunction = {
+        values: new Map(),
+        theta: 1.0,
+      }
 
-      // Filter out negligible results if desired
+      const careerEvidence = {
+        skills: new Set<string>(),
+        education: new Set<string>(),
+        current_job: undefined as string | undefined,
+      }
+
+      // Combine skill evidence for THIS career only
+      for (const mapping of evidence.skillMappings) {
+        const weight = Math.max(0, Math.min(MAX_BELIEF_WEIGHT, mapping.belief_weight))
+
+        const newMass: MassFunction = {
+          values: new Map([[careerId, weight]]),
+          theta: 1.0 - weight,
+        }
+
+        careerMass = this.combine(careerMass, newMass)
+        careerEvidence.skills.add(mapping.skillAvailable.name)
+      }
+
+      // Combine education evidence for THIS career only
+      for (const mapping of evidence.eduMappings) {
+        const weight = Math.max(0, Math.min(MAX_BELIEF_WEIGHT, mapping.belief_weight))
+
+        const newMass: MassFunction = {
+          values: new Map([[careerId, weight]]),
+          theta: 1.0 - weight,
+        }
+
+        careerMass = this.combine(careerMass, newMass)
+        careerEvidence.education.add(mapping.educational.level)
+      }
+
+      // Add current job evidence if applicable
+      if (evidence.currentJob) {
+        const jobWeight = 0.9
+        const newMass: MassFunction = {
+          values: new Map([[careerId, jobWeight]]),
+          theta: 1.0 - jobWeight,
+        }
+        careerMass = this.combine(careerMass, newMass)
+        careerEvidence.current_job = evidence.currentJob
+      }
+
+      // Calculate final belief and plausibility for this career
+      const massCareer = careerMass.values.get(careerId) || 0
+      const belief = massCareer
+      const plausibility = massCareer + careerMass.theta
+
+      // Get career title
+      const careerTitle = evidence.careerTitle || 'Unknown Career'
+
       if (plausibility > 0.001) {
         results.push({
           career: {
             id: careerId,
-            title: careerDetails.get(careerId) || 'Unknown Career',
+            title: careerTitle,
           },
           belief: Number(belief.toFixed(4)),
           plausibility: Number(plausibility.toFixed(4)),
           supporting_evidence: {
-            skills: Array.from(evidenceMap.get(careerId)?.skills || []),
-            education: Array.from(evidenceMap.get(careerId)?.education || []),
-            current_job: evidenceMap.get(careerId)?.current_job,
+            skills: Array.from(careerEvidence.skills),
+            education: Array.from(careerEvidence.education),
+            current_job: careerEvidence.current_job,
           },
         })
       }
@@ -224,12 +207,7 @@ export default class DempsterShaferService {
       newValues.set(careerId, (newValues.get(careerId) || 0) + val)
     }
 
-    // 1. Intersect m1 focal elements with m2 focal elements
-    // m1 focal elements are Singletons + Theta
     const m1Keys = Array.from(m1.values.keys())
-
-    // m2 focal elements are Singletons + Theta
-    // In our specific case, m2 usually has 1 Singleton + Theta, but we implement generally.
     const m2Keys = Array.from(m2.values.keys())
 
     // Case A: m1(Singleton X) * m2(Singleton Y)
@@ -264,8 +242,20 @@ export default class DempsterShaferService {
     // Intersection is THETA
     newTheta = m1.theta * m2.theta
 
-    // 2. Normalize by (1 - conflict)
+    // Handle complete or near-complete conflict
+    if (conflict >= 0.9999) {
+      console.warn('Complete conflict detected, returning previous mass function')
+      return m1
+    }
+
+    // Normalize by (1 - conflict)
     const normalizationFactor = 1.0 / (1.0 - conflict)
+
+    // Sanity check
+    if (!isFinite(normalizationFactor)) {
+      console.error('Invalid normalization factor:', normalizationFactor, 'conflict:', conflict)
+      return m1
+    }
 
     // Apply normalization
     for (const [k, v] of newValues) {
