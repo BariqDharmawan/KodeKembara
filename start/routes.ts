@@ -77,19 +77,18 @@ Route.group(() => {
   Route.group(() => {
     Route.get('/', 'CareerEducationMappingController.index')
     Route.get('career/:id', 'CareerEducationMappingController.show')
-    Route.post('/', 'CareerEducationMappingController.store')
-  })
-    .middleware('auth')
-    .prefix('career-education-mapping')
+    Route.post('/', 'CareerEducationMappingController.store').middleware('auth')
+  }).prefix('career-education-mapping')
 
   Route.group(() => {
     Route.get('/', 'CareerSkillMappingController.index')
     Route.get('career/:id', 'CareerSkillMappingController.show')
-    Route.post('/', 'CareerSkillMappingController.store')
-    Route.delete('career/:careerId/skill/:skillId', 'CareerSkillMappingController.destroy')
-  })
-    .middleware('auth')
-    .prefix('career-skill-mapping')
+    Route.post('/', 'CareerSkillMappingController.store').middleware('auth')
+    Route.delete(
+      'career/:careerId/skill/:skillId',
+      'CareerSkillMappingController.destroy'
+    ).middleware(['auth', 'isAdmin'])
+  }).prefix('career-skill-mapping')
 })
   .prefix('v1')
   .namespace('App/Controllers/Http')
