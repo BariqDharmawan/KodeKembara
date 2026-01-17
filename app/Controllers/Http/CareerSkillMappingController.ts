@@ -8,6 +8,9 @@ import { getCodeError, getMsgError } from 'Config/errorHandler'
 export default class CareerSkillMappingController {
   public async index() {
     const skillMappings = await CareerSkillMapping.query()
+      .whereHas('careerAvailable', (query) => {
+        query.whereNull('deleted_at')
+      })
       .preload('careerAvailable')
       .preload('skillAvailable')
       .orderBy('belief_weight', 'desc')
