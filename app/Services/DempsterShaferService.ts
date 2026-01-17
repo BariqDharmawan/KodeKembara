@@ -172,7 +172,8 @@ export default class DempsterShaferService {
       // Get career title
       const careerTitle = evidence.careerTitle || 'Unknown Career'
 
-      if (plausibility > 0.001) {
+      // Only include careers that have at least one skill
+      if (plausibility > 0.001 && careerEvidence.skills.size > 0) {
         results.push({
           career: {
             id: careerId,
