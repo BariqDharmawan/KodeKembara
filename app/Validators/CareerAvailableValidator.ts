@@ -8,6 +8,7 @@ export default class CareerAvailableValidator {
   public schema = schema.create({
     title: schema.string({ trim: true }, [
       rules.unique({ table: TABLE_NAME.career_available, column: 'title' }),
+      rules.minLength(3),
     ]),
     desc: schema.string({ trim: true }, [rules.minLength(10)]),
   })
