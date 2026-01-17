@@ -47,11 +47,11 @@ export default class CareerAvailablesController {
     const updateCareerAvailable = await CareerAvailable.findOrFail(params.id)
     updateCareerAvailable.title = request.input('title')
     updateCareerAvailable.desc = request.input('desc')
-    updateCareerAvailable.save()
+    await updateCareerAvailable.save()
 
     return response.status(201).json({
       message: 'Successfully update career',
-      data: updateCareerAvailable,
+      data: await CareerAvailable.findOrFail(params.id),
     })
   }
 
