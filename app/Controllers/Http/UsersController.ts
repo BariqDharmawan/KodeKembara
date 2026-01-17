@@ -154,7 +154,7 @@ export default class UsersController {
     const [currentUserEducation, educationalTaken] = await Promise.all([
       UserEducationalTaken.query()
         .where('user_uuid', auth.user!.id)
-        .where('educational_uuid', params.id)
+        // .where('educational_uuid', params.id)
         .first(),
       UserEducationalTaken.query().where('user_uuid', auth.user!.id).preload('educational'),
     ])
@@ -167,6 +167,11 @@ export default class UsersController {
       })
     }
 
-    return currentUserEducation.delete()
+    await currentUserEducation.delete()
+
+    return response.status(200).json({
+      code: 200,
+      message: `Successfully remove education ${educationToRemove.level} from your profile`,
+    })
   }
 }
