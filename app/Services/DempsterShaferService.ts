@@ -5,9 +5,9 @@ import UserEducationalTaken from 'App/Models/UserEducationalTaken'
 import User from 'App/Models/User'
 import CareerAvailable from 'App/Models/CareerAvailable'
 import { MAX_BELIEF_WEIGHT } from 'Config/constant'
+
 type MassFunction = {
-  // Map of CareerUUID -> Mass Value
-  values: Map<string, number>
+  singletons: Map<string, number>
   theta: number
 }
 
@@ -25,12 +25,17 @@ type RecommendationResult = {
   }
 }
 
+type Evidence = {
+  careerId: string
+  weight: number
+}
+
+const CURRENT_JOB_WEIGHT = 0.9
+const CONFLICT_EPSILON = 1e-9
+const MIN_PLAUSIBILITY = 0.001
+
 export default class DempsterShaferService {
-  /**
-   * Main entry point to calculate career recommendations for a user
-   */
   public async calculateCandidates(userId: User['id']): Promise<RecommendationResult[]> {
-    // 1. Fetch Evidence
     const userSkills = await SkillExperience.query().where('user_uuid', userId).preload('skillName')
 
     const userEducations = await UserEducationalTaken.query()
@@ -43,230 +48,150 @@ export default class DempsterShaferService {
     const skillIds = userSkills.map((s) => s.skill_availables_id)
     const eduIds = userEducations.map((e) => e.educational_uuid)
 
-    const skillMappings = await CareerSkillMapping.query()
-      .whereIn('skill_available_id', skillIds)
-      .preload('careerAvailable')
-      .preload('skillAvailable')
+    const skillMappings = skillIds.length
+      ? await CareerSkillMapping.query()
+          .whereIn('skill_available_id', skillIds)
+          .preload('careerAvailable')
+          .preload('skillAvailable')
+      : []
 
-    const eduMappings = await CareerEducationMapping.query()
-      .whereIn('educational_id', eduIds)
-      .preload('careerAvailable')
-      .preload('educational')
+    const eduMappings = eduIds.length
+      ? await CareerEducationMapping.query()
+          .whereIn('educational_id', eduIds)
+          .preload('careerAvailable')
+          .preload('educational')
+      : []
 
-    // 2. Group evidence by career
-    const careerEvidenceMap = new Map<
+    const evidences: Evidence[] = []
+    const careerTitles = new Map<string, string>()
+    const supporting = new Map<
       string,
-      {
-        skillMappings: typeof skillMappings
-        eduMappings: typeof eduMappings
-        currentJob?: string
-        careerTitle?: string
-      }
+      { skills: Set<string>; education: Set<string>; current_job?: string }
     >()
 
-    // Group skill mappings by career
+    const ensureSupporting = (careerId: string) => {
+      if (!supporting.has(careerId)) {
+        supporting.set(careerId, { skills: new Set(), education: new Set() })
+      }
+      return supporting.get(careerId)!
+    }
+
     for (const mapping of skillMappings) {
-      if (!careerEvidenceMap.has(mapping.career_available_id)) {
-        careerEvidenceMap.set(mapping.career_available_id, {
-          skillMappings: [],
-          eduMappings: [],
-          careerTitle: mapping.careerAvailable.title,
-        })
-      }
-      careerEvidenceMap.get(mapping.career_available_id)!.skillMappings.push(mapping)
+      const careerId = mapping.career_available_id
+      careerTitles.set(careerId, mapping.careerAvailable.title)
+      evidences.push({ careerId, weight: this.clampWeight(mapping.belief_weight) })
+      ensureSupporting(careerId).skills.add(mapping.skillAvailable.name)
     }
 
-    // Group education mappings by career
     for (const mapping of eduMappings) {
-      if (!careerEvidenceMap.has(mapping.career_available_id)) {
-        careerEvidenceMap.set(mapping.career_available_id, {
-          skillMappings: [],
-          eduMappings: [],
-          careerTitle: mapping.careerAvailable.title,
-        })
-      }
-      careerEvidenceMap.get(mapping.career_available_id)!.eduMappings.push(mapping)
-      // Set title if not already set
-      if (!careerEvidenceMap.get(mapping.career_available_id)!.careerTitle) {
-        careerEvidenceMap.get(mapping.career_available_id)!.careerTitle =
-          mapping.careerAvailable.title
-      }
+      const careerId = mapping.career_available_id
+      careerTitles.set(careerId, mapping.careerAvailable.title)
+      evidences.push({ careerId, weight: this.clampWeight(mapping.belief_weight) })
+      ensureSupporting(careerId).education.add(mapping.educational.level)
     }
 
-    // Process current job
     if (currentJob) {
       const matchingCareer = await CareerAvailable.query()
         .whereRaw('LOWER(title) = ?', [currentJob.toLowerCase()])
         .first()
 
       if (matchingCareer) {
-        if (!careerEvidenceMap.has(matchingCareer.id)) {
-          careerEvidenceMap.set(matchingCareer.id, {
-            skillMappings: [],
-            eduMappings: [],
-            careerTitle: matchingCareer.title,
-          })
-        }
-        careerEvidenceMap.get(matchingCareer.id)!.currentJob = currentJob
+        const careerId = matchingCareer.id
+        careerTitles.set(careerId, matchingCareer.title)
+        evidences.push({ careerId, weight: this.clampWeight(CURRENT_JOB_WEIGHT) })
+        ensureSupporting(careerId).current_job = currentJob
       }
     }
 
-    // 3. Calculate belief for EACH career independently
+    if (evidences.length === 0) {
+      return []
+    }
+
+    let fused: MassFunction = { singletons: new Map(), theta: 1 }
+
+    for (const evidence of evidences) {
+      const evidenceMass: MassFunction = {
+        singletons: new Map([[evidence.careerId, evidence.weight]]),
+        theta: 1 - evidence.weight,
+      }
+      fused = this.combine(fused, evidenceMass)
+    }
+
     const results: RecommendationResult[] = []
 
-    for (const [careerId, evidence] of careerEvidenceMap.entries()) {
-      // Start fresh for each career
-      let careerMass: MassFunction = {
-        values: new Map(),
-        theta: 1.0,
-      }
-
-      const careerEvidence = {
-        skills: new Set<string>(),
-        education: new Set<string>(),
-        current_job: undefined as string | undefined,
-      }
-
-      // Combine skill evidence for THIS career only
-      for (const mapping of evidence.skillMappings) {
-        const weight = Math.max(0, Math.min(MAX_BELIEF_WEIGHT, mapping.belief_weight))
-
-        const newMass: MassFunction = {
-          values: new Map([[careerId, weight]]),
-          theta: 1.0 - weight,
-        }
-
-        careerMass = this.combine(careerMass, newMass)
-        careerEvidence.skills.add(mapping.skillAvailable.name)
-      }
-
-      // Combine education evidence for THIS career only
-      for (const mapping of evidence.eduMappings) {
-        const weight = Math.max(0, Math.min(MAX_BELIEF_WEIGHT, mapping.belief_weight))
-
-        const newMass: MassFunction = {
-          values: new Map([[careerId, weight]]),
-          theta: 1.0 - weight,
-        }
-
-        careerMass = this.combine(careerMass, newMass)
-        careerEvidence.education.add(mapping.educational.level)
-      }
-
-      // Add current job evidence if applicable
-      if (evidence.currentJob) {
-        const jobWeight = 0.9
-        const newMass: MassFunction = {
-          values: new Map([[careerId, jobWeight]]),
-          theta: 1.0 - jobWeight,
-        }
-        careerMass = this.combine(careerMass, newMass)
-        careerEvidence.current_job = evidence.currentJob
-      }
-
-      // Calculate final belief and plausibility for this career
-      const massCareer = careerMass.values.get(careerId) || 0
+    for (const [careerId, massCareer] of fused.singletons.entries()) {
       const belief = massCareer
-      const plausibility = massCareer + careerMass.theta
+      const plausibility = massCareer + fused.theta
 
-      // Get career title
-      const careerTitle = evidence.careerTitle || 'Unknown Career'
-
-      // Only include careers that have at least one skill
-      if (plausibility > 0.001 && careerEvidence.skills.size > 0) {
-        results.push({
-          career: {
-            id: careerId,
-            title: careerTitle,
-          },
-          belief: Number(belief.toFixed(4)),
-          plausibility: Number(plausibility.toFixed(4)),
-          supporting_evidence: {
-            skills: Array.from(careerEvidence.skills),
-            education: Array.from(careerEvidence.education),
-            current_job: careerEvidence.current_job,
-          },
-        })
+      const evidence = supporting.get(careerId)
+      if (plausibility <= MIN_PLAUSIBILITY || !evidence || evidence.skills.size === 0) {
+        continue
       }
+
+      results.push({
+        career: {
+          id: careerId,
+          title: careerTitles.get(careerId) || 'Unknown Career',
+        },
+        belief: Number(belief.toFixed(4)),
+        plausibility: Number(plausibility.toFixed(4)),
+        supporting_evidence: {
+          skills: Array.from(evidence.skills),
+          education: Array.from(evidence.education),
+          current_job: evidence.current_job,
+        },
+      })
     }
 
-    // Sort by Belief high to low
-    return results.sort((a, b) => b.belief - a.belief)
+    return results.sort((a, b) => b.belief - a.belief || b.plausibility - a.plausibility)
   }
 
-  /**
-   * Dempster's Rule of Combination
-   * m1 (+) m2
-   */
+  private clampWeight(weight: number): number {
+    if (!Number.isFinite(weight)) return 0
+    return Math.max(0, Math.min(MAX_BELIEF_WEIGHT, weight))
+  }
+
   private combine(m1: MassFunction, m2: MassFunction): MassFunction {
-    const newValues = new Map<string, number>()
-    let newTheta = 0
+    const combined = new Map<string, number>()
     let conflict = 0
 
-    // Helper to add to newValues
     const addMass = (careerId: string, val: number) => {
-      newValues.set(careerId, (newValues.get(careerId) || 0) + val)
+      combined.set(careerId, (combined.get(careerId) || 0) + val)
     }
 
-    const m1Keys = Array.from(m1.values.keys())
-    const m2Keys = Array.from(m2.values.keys())
-
-    // Case A: m1(Singleton X) * m2(Singleton Y)
-    for (const k1 of m1Keys) {
-      for (const k2 of m2Keys) {
-        const val = m1.values.get(k1)! * m2.values.get(k2)!
+    // Singleton x Singleton
+    for (const [k1, v1] of m1.singletons) {
+      for (const [k2, v2] of m2.singletons) {
+        const val = v1 * v2
         if (k1 === k2) {
-          // Intersection is Singleton k1
           addMass(k1, val)
         } else {
-          // Intersection is Empty Set -> Conflict
           conflict += val
         }
       }
     }
 
-    // Case B: m1(Singleton X) * m2(THETA)
-    // Intersection is Singleton X
-    for (const k1 of m1Keys) {
-      const val = m1.values.get(k1)! * m2.theta
-      addMass(k1, val)
+    for (const [k1, v1] of m1.singletons) {
+      addMass(k1, v1 * m2.theta)
     }
 
-    // Case C: m1(THETA) * m2(Singleton Y)
-    // Intersection is Singleton Y
-    for (const k2 of m2Keys) {
-      const val = m1.theta * m2.values.get(k2)!
-      addMass(k2, val)
+    for (const [k2, v2] of m2.singletons) {
+      addMass(k2, m1.theta * v2)
     }
 
-    // Case D: m1(THETA) * m2(THETA)
-    // Intersection is THETA
-    newTheta = m1.theta * m2.theta
+    let theta = m1.theta * m2.theta
 
-    // Handle complete or near-complete conflict
-    if (conflict >= 0.9999) {
-      console.warn('Complete conflict detected, returning previous mass function')
+    if (conflict >= 1 - CONFLICT_EPSILON) {
+      console.warn(`Dempster-Shafer: near-total conflict (K=${conflict}); keeping previous mass`)
       return m1
     }
 
-    // Normalize by (1 - conflict)
-    const normalizationFactor = 1.0 / (1.0 - conflict)
-
-    // Sanity check
-    if (!isFinite(normalizationFactor)) {
-      console.error('Invalid normalization factor:', normalizationFactor, 'conflict:', conflict)
-      return m1
+    const norm = 1 / (1 - conflict)
+    for (const [k, v] of combined) {
+      combined.set(k, v * norm)
     }
+    theta *= norm
 
-    // Apply normalization
-    for (const [k, v] of newValues) {
-      newValues.set(k, v * normalizationFactor)
-    }
-    newTheta = newTheta * normalizationFactor
-
-    return {
-      values: newValues,
-      theta: newTheta,
-    }
+    return { singletons: combined, theta }
   }
 }
