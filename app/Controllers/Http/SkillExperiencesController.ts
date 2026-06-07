@@ -38,18 +38,22 @@ export default class SkillExperiencesController {
     }
   }
 
-  public async destroy({ params, response, bouncer, auth }: HttpContextContract) {
-    const skillToDelete = await SkillExperience.query()
-      .where('user_uuid', auth.user!.id)
-      .where('skill_availables_id', params.id)
-      .preload('skillName')
-      .firstOrFail()
+  public async destroy({ params, response, auth }: HttpContextContract) {
+    const skillAvailable = await SkillAvailable.find(params.id)
 
-    if (await bouncer.denies('deleteSkillUSer', skillToDelete)) {
-      return response.status(403).json({
-        message: 'You cant delete other user skill',
-        userId: skillToDelete.user_uuid,
-        authId: auth.user?.id,
+    if (!skillAvailable) {
+      return response.status(404).json({ message: 'Skill not found' })
+    }
+
+    const skillToDelete = await SkillExperience.query()
+      .where('skill_availables_id', params.id)
+      .where('user_uuid', auth.user!.id)
+      .preload('skillName')
+      .first()
+
+    if (!skillToDelete) {
+      return response.status(404).json({
+        message: `You dont have skill "${skillAvailable.name}" in your profile`,
       })
     }
 
